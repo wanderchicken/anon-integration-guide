@@ -17,9 +17,7 @@ Each module (protocol) must follow this minimal structure:
 your-module/
 ├── functions/
 │   ├── index.ts
-│   ├── depositTokens.ts
-│   ├── withdrawTokens.ts
-│   └── getBalance.ts
+│   ├── your-function.ts
 ├── index.ts
 ├── package.json
 ├── tools.ts
