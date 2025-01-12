@@ -1,5 +1,4 @@
-import { AiTool } from 'libs/ai';
-import { getChainName } from 'libs/blockchain';
+import { AiTool, getChainName } from '@heyanon/sdk';
 import { supportedChains } from './constants';
 
 export const tools: AiTool[] = [

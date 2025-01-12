@@ -12,7 +12,7 @@ DESCRIPTION=$2
 CHAINS=$3
 
 # Path to the projects directory
-BASE_PATH="../AnonIntegration/$MODULE_NAME"
+BASE_PATH="../projects/$MODULE_NAME"
 
 # Create directories
 echo "Creating directories..."

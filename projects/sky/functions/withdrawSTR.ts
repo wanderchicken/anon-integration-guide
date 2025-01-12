@@ -1,7 +1,5 @@
 import { Address, encodeFunctionData, parseUnits, formatUnits } from 'viem';
-import { FunctionReturn, SystemTools, TransactionParams } from 'libs/adapters/types';
-import { toResult } from 'libs/adapters/transformers';
-import { getChainFromName, getViemClient } from 'libs/blockchain';
+import { FunctionReturn, FunctionOptions, TransactionParams, toResult, getChainFromName } from '@heyanon/sdk';
 import { supportedChains, STR_ADDRESS } from '../constants';
 import { strAbi } from '../abis';
 
@@ -11,9 +9,7 @@ interface Props {
     amount: string;
 }
 
-export async function withdrawSTR({ chainName, account, amount }: Props, tools: SystemTools): Promise<FunctionReturn> {
-    const { sign, notify } = tools;
-
+export async function withdrawSTR({ chainName, account, amount }: Props, { signTransactions, notify, getProvider }: FunctionOptions): Promise<FunctionReturn> {
     if (!account) return toResult('Wallet not connected', true);
 
     const chainId = getChainFromName(chainName);
@@ -26,7 +22,7 @@ export async function withdrawSTR({ chainName, account, amount }: Props, tools: 
     if (amountInWei === 0n) return toResult('Amount must be greater than 0', true);
 
     // Check user's staked balance
-    const publicClient = getViemClient({ chainId });
+    const publicClient = getProvider(chainId);
     const stakedBalance = await publicClient.readContract({
         address: STR_ADDRESS,
         abi: strAbi,
@@ -51,8 +47,8 @@ export async function withdrawSTR({ chainName, account, amount }: Props, tools: 
 
     await notify('Waiting for transaction confirmation...');
 
-    const result = await sign(chainId, account, [tx]);
-    const withdrawMessage = result.messages[result.messages.length - 1];
+    const result = await signTransactions({ chainId, account, transactions: [tx] });
+    const withdrawMessage = result.data[result.data.length - 1];
 
-    return toResult(result.isMultisig ? withdrawMessage : `Successfully withdrawn ${amount} USDS from STR. ${withdrawMessage}`);
+    return toResult(result.isMultisig ? withdrawMessage.message : `Successfully withdrawn ${amount} USDS from STR. ${withdrawMessage.message}`);
 }

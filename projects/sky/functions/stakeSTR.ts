@@ -1,19 +1,14 @@
 import { Address, encodeFunctionData, parseUnits } from 'viem';
-import { FunctionReturn, SystemTools, TransactionParams } from '../../../types';
-import { toResult } from '../../../transformers';
-import { getChainFromName } from 'libs/blockchain';
+import { FunctionReturn, FunctionOptions, TransactionParams, toResult, getChainFromName, checkToApprove } from '@heyanon/sdk';
 import { supportedChains, STR_ADDRESS, USDS_ADDRESS } from '../constants';
 import { strAbi } from '../abis';
-import { checkToApprove } from '../../../helpers';
 
 interface Props {
     chainName: string;
     account: Address;
     amount: string;
 }
-export async function stakeSTR({ chainName, account, amount }: Props, tools: SystemTools): Promise<FunctionReturn> {
-    const { sign, notify } = tools;
-
+export async function stakeSTR({ chainName, account, amount }: Props, { signTransactions, getProvider, notify }: FunctionOptions): Promise<FunctionReturn> {
     if (!account) return toResult('Wallet not connected', true);
 
     const chainId = getChainFromName(chainName);
@@ -25,14 +20,21 @@ export async function stakeSTR({ chainName, account, amount }: Props, tools: Sys
     const amountInWei = parseUnits(amount, 18);
     if (amountInWei === 0n) return toResult('Amount must be greater than 0', true);
 
-    const txData: TransactionParams[] = [];
+    const provider = getProvider(chainId);
+    const transactions: TransactionParams[] = [];
 
     // Check and prepare approve transaction if needed
-    const approve = await checkToApprove(chainName, account, USDS_ADDRESS, STR_ADDRESS, amountInWei);
-    if (approve.length > 0) {
-        await notify('Approval needed for USDS token transfer...');
-    }
-    txData.push(...approve);
+    await checkToApprove({
+        args: {
+            account,
+            target: USDS_ADDRESS,
+            spender: STR_ADDRESS,
+            amount: amountInWei
+        },
+        transactions,
+        provider,
+    });
+    
     // Prepare stake transaction
     const tx: TransactionParams = {
         target: STR_ADDRESS,
@@ -42,12 +44,12 @@ export async function stakeSTR({ chainName, account, amount }: Props, tools: Sys
             args: [amountInWei],
         }),
     };
-    txData.push(tx);
+    transactions.push(tx);
 
     await notify('Waiting for transaction confirmation...');
 
-    const result = await sign(chainId, account, txData);
-    const stakeMessage = result.messages[result.messages.length - 1];
+    const result = await signTransactions({ chainId, account, transactions });
+    const stakeMessage = result.data[result.data.length - 1];
 
-    return toResult(result.isMultisig ? stakeMessage : `Successfully staked ${amount} USDS in STR. ${stakeMessage}`);
+    return toResult(result.isMultisig ? stakeMessage.message : `Successfully staked ${amount} USDS in STR. ${stakeMessage.message}`);
 }

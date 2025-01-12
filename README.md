@@ -44,7 +44,7 @@ Example:
 
 The script will create:
 
-1. Module directory structure in @AnonIntegration folder:
+1. Module directory structure in [projects](./projects) folder:
    - `abis/` - for contract ABIs
    - `functions/` - for action and getter functions
    - Configuration files (index.ts, tools.ts, etc.)
@@ -58,7 +58,7 @@ After creation, follow the printed instructions to complete module setup.
 
 ### Module Structure
 
-All modules must be placed in the `@AnonIntegration` directory. This ensures consistent organization and easier maintenance of the codebase.
+All modules must be placed in the [projects](./projects) directory. This ensures consistent organization and easier maintenance of the codebase.
 
 ### Development Process
 

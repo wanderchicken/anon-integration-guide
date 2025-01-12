@@ -1,10 +1,7 @@
 import { Address, encodeFunctionData, parseUnits } from 'viem';
-import { FunctionReturn, SystemTools, TransactionParams } from 'libs/adapters/types';
-import { toResult } from 'libs/adapters/transformers';
-import { getChainFromName } from 'libs/blockchain';
+import { FunctionReturn, FunctionOptions, TransactionParams, toResult, getChainFromName, checkToApprove } from '@heyanon/sdk';
 import { supportedChains, SSR_ADDRESS, USDS_ADDRESS } from '../constants';
 import { ssrAbi } from '../abis';
-import { checkToApprove } from 'libs/adapters/helpers';
 
 interface Props {
     chainName: string;
@@ -13,9 +10,7 @@ interface Props {
     referral?: number;
 }
 
-export async function depositSSR({ chainName, account, amount }: Props, tools: SystemTools): Promise<FunctionReturn> {
-    const { sign, notify } = tools;
-
+export async function depositSSR({ chainName, account, amount }: Props, { signTransactions, notify, getProvider }: FunctionOptions): Promise<FunctionReturn> {
     if (!account) return toResult('Wallet not connected', true);
 
     const chainId = getChainFromName(chainName);
@@ -27,14 +22,21 @@ export async function depositSSR({ chainName, account, amount }: Props, tools: S
     const amountInWei = parseUnits(amount, 18);
     if (amountInWei === 0n) return toResult('Amount must be greater than 0', true);
 
-    const txData: TransactionParams[] = [];
+    const provider = getProvider(chainId);
+
+    const transactions: TransactionParams[] = [];
 
     // Check and prepare approve transaction if needed
-    const approve = await checkToApprove(chainName, account, USDS_ADDRESS, SSR_ADDRESS, amountInWei);
-    if (approve.length > 0) {
-        await notify('Approval needed for USDS token transfer...');
-    }
-    txData.push(...approve);
+    await checkToApprove({
+        args: {
+            account,
+            target: USDS_ADDRESS,
+            spender: SSR_ADDRESS,
+            amount: amountInWei,
+        },
+        provider,
+        transactions
+    });
 
     // Prepare deposit transaction
     const tx: TransactionParams = {
@@ -45,12 +47,12 @@ export async function depositSSR({ chainName, account, amount }: Props, tools: S
             args: [amountInWei, account],
         }),
     };
-    txData.push(tx);
+    transactions.push(tx);
 
     await notify('Waiting for transaction confirmation...');
 
-    const result = await sign(chainId, account, txData);
-    const depositMessage = result.messages[result.messages.length - 1];
+    const result = await signTransactions({ chainId, account, transactions });
+    const depositMessage = result.data[result.data.length - 1];
 
-    return toResult(result.isMultisig ? depositMessage : `Successfully deposited ${amount} USDS to SSR. ${depositMessage}`);
+    return toResult(result.isMultisig ? depositMessage.message : `Successfully deposited ${amount} USDS to SSR. ${depositMessage.message}`);
 }

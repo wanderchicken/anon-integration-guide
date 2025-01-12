@@ -1,7 +1,5 @@
 import { Address, parseUnits, formatUnits } from 'viem';
-import { FunctionReturn } from '../../../types';
-import { toResult } from '../../../transformers';
-import { getViemClient, getChainFromName } from 'libs/blockchain';
+import { FunctionReturn, toResult, FunctionOptions, getChainFromName } from '@heyanon/sdk';
 import { supportedChains, SSR_ADDRESS } from '../constants';
 import { ssrAbi } from '../abis';
 
@@ -11,7 +9,7 @@ interface Props {
     amount: string;
 }
 
-export async function convertToAssetsSSR({ chainName, amount }: Props): Promise<FunctionReturn> {
+export async function convertToSharesSSR({ chainName, amount }: Props, { getProvider }: FunctionOptions): Promise<FunctionReturn> {
     const chainId = getChainFromName(chainName);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Sky protocol is not supported on ${chainName}`, true);
@@ -19,14 +17,14 @@ export async function convertToAssetsSSR({ chainName, amount }: Props): Promise<
     const amountInWei = parseUnits(amount, 18);
     if (amountInWei === 0n) return toResult('Amount must be greater than 0', true);
 
-    const publicClient = getViemClient({ chainId });
+    const publicClient = getProvider(chainId);
 
-    const assets = await publicClient.readContract({
+    const shares = await publicClient.readContract({
         address: SSR_ADDRESS,
         abi: ssrAbi,
-        functionName: 'convertToAssets',
+        functionName: 'convertToShares',
         args: [amountInWei],
     });
 
-    return toResult(`${amount} sUSDS = ${formatUnits(assets, 18)} USDS`);
+    return toResult(`${amount} USDS = ${formatUnits(shares, 18)} sUSDS`);
 }

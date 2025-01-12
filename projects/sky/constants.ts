@@ -1,4 +1,4 @@
-import { ChainId } from 'libs/blockchain';
+import { ChainId } from '@heyanon/sdk';
 
 export const supportedChains = [ChainId.ETHEREUM];
 
