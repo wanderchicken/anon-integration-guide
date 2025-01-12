@@ -4,7 +4,7 @@
 
 - **Module Structure**: Each module must follow the established directory structure.
 - **Function Implementations**:
-  - **Action Functions**: Perform transactions and utilize the `sign` function from `SystemTools`.
+  - **Action Functions**: Perform transactions and utilize the `signTransactions` function from `FunctionOptions`.
   - **Getter Functions**: Retrieve data without performing transactions.
 - **Tools Implementation**: Provide a `tools.ts` file defining functions and their parameters for LLM integration, following the OpenAI function calling specification.
 - **Error Handling**: Functions must handle errors gracefully, using the `toResult` transformer for standardized responses.

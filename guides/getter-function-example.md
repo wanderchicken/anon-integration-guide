@@ -2,9 +2,7 @@
 
 ```typescript
 import { Address } from "viem";
-import { FunctionReturn } from "libs/adapters/types";
-import { toResult } from "libs/adapters/transformers";
-import { getChainFromName } from "libs/blockchain";
+import { FunctionReturn, toResult, getChainFromName } from "@heyanon/sdk";
 
 interface Props {
   chainName: string;
@@ -44,7 +42,7 @@ export async function getRewardsExample({
 **Key Points**:
 
 - Validates input arguments.
-- Does not use `sign`.
+- Does not use `signTransactions`.
 - Ensures data returned does not exceed 500 tokens.
 - Returns the result using `toResult`.
 - Includes JSDoc comments.
