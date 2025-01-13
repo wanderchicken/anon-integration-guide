@@ -100,9 +100,9 @@ All modules must be placed in the [projects](./projects) directory. This ensures
 
 ## Supported Networks
 
-Available networks for integration:
+[Available networks for integration:](https://github.com/RealWagmi/heyanon-sdk/blob/main/src/blockchain/constants/chains.ts)
 
-### [Mainnet Networks](https://github.com/RealWagmi/heyanon-sdk/blob/main/src/blockchain/constants/chains.ts)
+### Mainnet Networks
 
 - ETHEREUM (Ethereum Mainnet, 1)
 - OPTIMISM (Optimism, 10)
