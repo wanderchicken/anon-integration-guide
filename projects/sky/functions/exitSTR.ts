@@ -1,7 +1,5 @@
 import { Address, encodeFunctionData } from 'viem';
-import { FunctionReturn, SystemTools, TransactionParams } from 'libs/adapters/types';
-import { toResult } from 'libs/adapters/transformers';
-import { getChainFromName, getViemClient } from 'libs/blockchain';
+import { FunctionReturn, FunctionOptions, TransactionParams, toResult, getChainFromName } from '@heyanon/sdk';
 import { supportedChains, STR_ADDRESS } from '../constants';
 import { strAbi } from '../abis';
 
@@ -10,9 +8,7 @@ interface Props {
     account: Address;
 }
 
-export async function exitSTR({ chainName, account }: Props, tools: SystemTools): Promise<FunctionReturn> {
-    const { sign, notify } = tools;
-
+export async function exitSTR({ chainName, account }: Props, { sendTransactions, getProvider, notify}: FunctionOptions): Promise<FunctionReturn> {
     if (!account) return toResult('Wallet not connected', true);
 
     const chainId = getChainFromName(chainName);
@@ -22,7 +18,7 @@ export async function exitSTR({ chainName, account }: Props, tools: SystemTools)
     await notify('Checking staked balance...');
 
     // Check if user has staked balance
-    const publicClient = getViemClient({ chainId });
+    const publicClient = getProvider(chainId);
 
     // Check if user has any staked tokens
     const stakedBalance = await publicClient.readContract({
@@ -49,8 +45,8 @@ export async function exitSTR({ chainName, account }: Props, tools: SystemTools)
 
     await notify('Waiting for transaction confirmation...');
 
-    const result = await sign(chainId, account, [tx]);
-    const exitMessage = result.messages[result.messages.length - 1];
+    const result = await sendTransactions({ chainId, account, transactions: [tx] });
+    const exitMessage = result.data[result.data.length - 1];
 
-    return toResult(result.isMultisig ? exitMessage : `Successfully exited from STR (withdrawn all + claimed rewards). ${exitMessage}`);
+    return toResult(result.isMultisig ? exitMessage.message : `Successfully exited from STR (withdrawn all + claimed rewards). ${exitMessage.message}`);
 }

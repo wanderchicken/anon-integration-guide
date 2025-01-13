@@ -19,7 +19,7 @@ Each module must include a `tools.ts` file that defines functions for LLM integr
 
    - Import required chain utilities:
      ```typescript
-     import { getChainName } from "libs/blockchain";
+     import { getChainName } from "@heyanon/sdk";
      import { supportedChains } from "./constants";
      ```
    - Use chain enumeration for network parameters:
@@ -33,7 +33,7 @@ Each module must include a `tools.ts` file that defines functions for LLM integr
    - Define supported chains in your module's `constants.ts`:
 
      ```typescript
-     import { ChainId } from "libs/blockchain";
+     import { ChainId } from "@heyanon/sdk";
 
      export const supportedChains = [ChainId.ETHEREUM];
      ```
@@ -48,7 +48,7 @@ Each module must include a `tools.ts` file that defines functions for LLM integr
 ## Example Implementation
 
 ```typescript
-import { getChainName } from "libs/blockchain";
+import { getChainName } from "@heyanon/sdk";
 import { supportedChains } from "./constants";
 
 export const functions = [

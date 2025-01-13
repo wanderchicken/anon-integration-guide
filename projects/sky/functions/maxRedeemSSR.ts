@@ -1,7 +1,5 @@
 import { Address, formatUnits } from 'viem';
-import { FunctionReturn } from '../../../types';
-import { toResult } from '../../../transformers';
-import { getViemClient, getChainFromName } from 'libs/blockchain';
+import { FunctionReturn, toResult, getChainFromName, FunctionOptions } from '@heyanon/sdk';
 import { supportedChains, SSR_ADDRESS } from '../constants';
 import { ssrAbi } from '../abis';
 
@@ -10,19 +8,19 @@ interface Props {
     account: Address;
 }
 
-export async function maxWithdrawSSR({ chainName, account }: Props): Promise<FunctionReturn> {
+export async function maxRedeemSSR({ chainName, account }: Props, { getProvider }: FunctionOptions): Promise<FunctionReturn> {
     const chainId = getChainFromName(chainName);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Sky protocol is not supported on ${chainName}`, true);
 
-    const publicClient = getViemClient({ chainId });
+    const publicClient = getProvider(chainId);
 
-    const maxWithdraw = await publicClient.readContract({
+    const maxRedeem = await publicClient.readContract({
         address: SSR_ADDRESS,
         abi: ssrAbi,
-        functionName: 'maxWithdraw',
+        functionName: 'maxRedeem',
         args: [account],
     });
 
-    return toResult(`Maximum withdrawable amount: ${formatUnits(maxWithdraw, 18)} USDS`);
+    return toResult(`Maximum redeemable amount: ${formatUnits(maxRedeem, 18)} sUSDS`);
 }

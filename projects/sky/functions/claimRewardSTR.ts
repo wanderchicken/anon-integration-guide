@@ -1,7 +1,5 @@
 import { Address, encodeFunctionData } from 'viem';
-import { FunctionReturn, SystemTools, TransactionParams } from 'libs/adapters/types';
-import { toResult } from 'libs/adapters/transformers';
-import { getChainFromName, getViemClient } from 'libs/blockchain';
+import { FunctionReturn, FunctionOptions, TransactionParams, toResult, getChainFromName } from '@heyanon/sdk';
 import { supportedChains, STR_ADDRESS } from '../constants';
 import { strAbi } from '../abis';
 
@@ -10,9 +8,7 @@ interface Props {
     account: Address;
 }
 
-export async function claimRewardSTR({ chainName, account }: Props, tools: SystemTools): Promise<FunctionReturn> {
-    const { sign, notify } = tools;
-
+export async function claimRewardSTR({ chainName, account }: Props, { sendTransactions, notify, getProvider }: FunctionOptions): Promise<FunctionReturn> {
     if (!account) return toResult('Wallet not connected', true);
 
     const chainId = getChainFromName(chainName);
@@ -22,7 +18,7 @@ export async function claimRewardSTR({ chainName, account }: Props, tools: Syste
     await notify('Checking pending rewards...');
 
     // Check pending rewards
-    const publicClient = getViemClient({ chainId });
+    const publicClient = getProvider(chainId);
     const pendingReward = await publicClient.readContract({
         address: STR_ADDRESS,
         abi: strAbi,
@@ -47,8 +43,8 @@ export async function claimRewardSTR({ chainName, account }: Props, tools: Syste
 
     await notify('Waiting for transaction confirmation...');
 
-    const result = await sign(chainId, account, [tx]);
-    const claimMessage = result.messages[result.messages.length - 1];
+    const result = await sendTransactions({ chainId, account, transactions: [tx] });
+    const claimMessage = result.data[result.data.length - 1];
 
-    return toResult(result.isMultisig ? claimMessage : `Successfully claimed SKY rewards. ${claimMessage}`);
+    return toResult(result.isMultisig ? claimMessage.message : `Successfully claimed SKY rewards. ${claimMessage.message}`);
 }

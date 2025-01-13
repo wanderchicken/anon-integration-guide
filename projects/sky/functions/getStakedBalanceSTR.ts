@@ -1,7 +1,5 @@
 import { Address, formatUnits } from 'viem';
-import { FunctionReturn } from '../../../types';
-import { toResult } from '../../../transformers';
-import { getViemClient, getChainFromName } from 'libs/blockchain';
+import { FunctionReturn, toResult, getChainFromName, FunctionOptions } from '@heyanon/sdk';
 import { supportedChains, STR_ADDRESS } from '../constants';
 import { strAbi } from '../abis';
 
@@ -10,12 +8,12 @@ interface Props {
     account: Address;
 }
 
-export async function getStakedBalanceSTR({ chainName, account }: Props): Promise<FunctionReturn> {
+export async function getStakedBalanceSTR({ chainName, account }: Props, { getProvider }: FunctionOptions): Promise<FunctionReturn> {
     const chainId = getChainFromName(chainName);
     if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
     if (!supportedChains.includes(chainId)) return toResult(`Sky protocol is not supported on ${chainName}`, true);
 
-    const publicClient = getViemClient({ chainId });
+    const publicClient = getProvider(chainId);
 
     const balance = await publicClient.readContract({
         address: STR_ADDRESS,

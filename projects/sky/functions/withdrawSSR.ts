@@ -1,10 +1,8 @@
 import { Address, parseUnits, formatUnits, encodeFunctionData } from 'viem';
-import { FunctionReturn, SystemTools, TransactionParams } from 'libs/adapters/types';
-import { toResult } from 'libs/adapters/transformers';
-import { getChainFromName } from 'libs/blockchain';
+import { FunctionReturn, FunctionOptions, TransactionParams, toResult, getChainFromName } from '@heyanon/sdk';
 import { supportedChains, SSR_ADDRESS, SUSDS_ADDRESS } from '../constants';
 import { ssrAbi } from '../abis';
-import { balanceOf } from 'libs/adapters/helpers';
+import { erc20Abi } from 'viem';
 
 interface Props {
     chainName: string;
@@ -12,9 +10,7 @@ interface Props {
     amount: string;
 }
 
-export async function withdrawSSR({ chainName, account, amount }: Props, tools: SystemTools): Promise<FunctionReturn> {
-    const { sign, notify } = tools;
-
+export async function withdrawSSR({ chainName, account, amount }: Props, { sendTransactions, notify, getProvider }: FunctionOptions): Promise<FunctionReturn> {
     if (!account) return toResult('Wallet not connected', true);
 
     const chainId = getChainFromName(chainName);
@@ -26,7 +22,8 @@ export async function withdrawSSR({ chainName, account, amount }: Props, tools: 
     const amountInWei = parseUnits(amount, 18);
     if (amountInWei === 0n) return toResult('Amount must be greater than 0', true);
 
-    const sUSdsBalance = await balanceOf(chainName, account, SUSDS_ADDRESS);
+    const provider = getProvider(chainId);
+    const sUSdsBalance = await provider.readContract({ abi: erc20Abi, address: SUSDS_ADDRESS, functionName: 'balanceOf', args: [account] });
 
     if (sUSdsBalance < amountInWei) {
         return toResult(`Insufficient sUSDS balance. Have ${formatUnits(sUSdsBalance, 18)}, want to withdraw ${amount}`, true);
@@ -43,8 +40,8 @@ export async function withdrawSSR({ chainName, account, amount }: Props, tools: 
 
     await notify('Waiting for transaction confirmation...');
 
-    const result = await sign(chainId, account, [tx]);
-    const withdrawMessage = result.messages[result.messages.length - 1];
+    const result = await sendTransactions({ chainId, account, transactions: [tx] });
+    const withdrawMessage = result.data[result.data.length - 1];
 
-    return toResult(result.isMultisig ? withdrawMessage : `Successfully withdrawn ${amount} USDS from SSR. ${withdrawMessage}`);
+    return toResult(result.isMultisig ? withdrawMessage.message : `Successfully withdrawn ${amount} USDS from SSR. ${withdrawMessage.message}`);
 }

@@ -4,14 +4,14 @@
 import { Address, encodeFunctionData, parseUnits } from "viem";
 import {
   FunctionReturn,
-  SystemTools,
+  FunctionOptions,
   TransactionParams,
-} from "libs/adapters/types";
-import { toResult } from "libs/adapters/transformers";
-import { getChainFromName } from "libs/blockchain";
+  toResult,
+  getChainFromName,
+  checkToApprove
+} from "@heyanon/sdk";
 import { supportedChains, PROTOCOL_ADDRESS, TOKEN_ADDRESS } from "../constants";
 import { protocolAbi } from "../abis";
-import { checkToApprove } from "libs/adapters/helpers";
 
 interface Props {
   chainName: string;
@@ -27,10 +27,8 @@ interface Props {
  */
 export async function deposit(
   { chainName, account, amount }: Props,
-  tools: SystemTools
+  { sendTransactions, notify, getProvider }: FunctionOptions
 ): Promise<FunctionReturn> {
-  const { sign, notify } = tools;
-
   // Check wallet connection
   if (!account) return toResult("Wallet not connected", true);
 
@@ -47,20 +45,21 @@ export async function deposit(
 
   await notify("Preparing to deposit tokens...");
 
-  const txData: TransactionParams[] = [];
+  const provider = getProvider(chainId);
+  const transactions: TransactionParams[] = [];
 
   // Check and prepare approve transaction if needed
-  const approve = await checkToApprove(
-    chainName,
-    account,
-    TOKEN_ADDRESS,
-    PROTOCOL_ADDRESS,
-    amountInWei
+  await checkToApprove({
+      args: {
+          account,
+          target: TOKEN_ADDRESS,
+          spender: PROTOCOL_ADDRESS,
+          amount: amountInWei
+      },
+      provider,
+      transactions
+    }
   );
-  if (approve.length > 0) {
-    await notify("Approval needed for token transfer...");
-  }
-  txData.push(...approve);
 
   // Prepare deposit transaction
   const tx: TransactionParams = {
@@ -71,18 +70,18 @@ export async function deposit(
       args: [amountInWei, account],
     }),
   };
-  txData.push(tx);
+  transactions.push(tx);
 
   await notify("Waiting for transaction confirmation...");
 
   // Sign and send transaction
-  const result = await sign(chainId, account, txData);
-  const depositMessage = result.messages[result.messages.length - 1];
+  const result = await sendTransactions({ chainId, account, transactions });
+  const depositMessage = result.data[result.data.length - 1];
 
   return toResult(
     result.isMultisig
-      ? depositMessage
-      : `Successfully deposited ${amount} tokens. ${depositMessage}`
+      ? depositMessage.message
+      : `Successfully deposited ${amount} tokens. ${depositMessage.message}`
   );
 }
 ```
@@ -91,7 +90,7 @@ export async function deposit(
 
 - Validates input arguments.
 - Uses `notify` to inform the user.
-- Calls `sign` only once with the transaction array.
+- Calls `sendTransactions` only once with the transaction array.
 - Returns the result using `toResult`.
 - Includes JSDoc comments.
   </code_block_to_apply_changes_from>

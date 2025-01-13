@@ -1,6 +1,6 @@
 # Action Functions Implementation Guide
 
-Action functions perform transactions and interact with the blockchain. They use the `sign` function from `SystemTools` to execute transactions.
+Action functions perform transactions and interact with the blockchain. They use the `sendTransactions` function from `FunctionOptions` to execute transactions.
 
 ## Guidelines
 
@@ -16,7 +16,7 @@ Action functions perform transactions and interact with the blockchain. They use
 
 3. **Using `notify`**
 
-   - Use the `notify` function from `SystemTools` to inform users about the operations being performed.
+   - Use the `notify` function from `FunctionOptions` to inform users about the operations being performed.
    - Example:
 
      ```typescript
@@ -25,47 +25,48 @@ Action functions perform transactions and interact with the blockchain. They use
 
 4. **Transaction Signing**
 
-   - Use the `sign` function from `SystemTools` **once** in the function.
+   - Use the `sendTransactions` function from `FunctionOptions` **once** in the function.
    - Pass an array of transactions that need to be signed.
    - Example:
 
      ```typescript
-     const txData: TransactionParams[] = [];
+      const transactions: TransactionParams[] = [];
 
-     // Check and prepare approve transaction if needed
-     const approve = await checkToApprove(
-       chainName,
-       account,
-       TOKEN_ADDRESS,
-       PROTOCOL_ADDRESS,
-       amountInWei
-     );
-     if (approve.length > 0) {
-       await notify("Approval needed for token transfer...");
-     }
-     txData.push(...approve);
+      // Check and prepare approve transaction if needed
+      await checkToApprove({
+          args: {
+              account,
+              target: TOKEN_ADDRESS,
+              spender: PROTOCOL_ADDRESS,
+              amount: amountInWei
+          },
+          provider,
+          transactions
+        }
+      );
 
-     // Prepare deposit transaction
-     const tx: TransactionParams = {
-       target: PROTOCOL_ADDRESS,
-       data: encodeFunctionData({
-         abi: protocolAbi,
-         functionName: "deposit",
-         args: [amountInWei, account],
-       }),
-     };
-     txData.push(tx);
+      // Prepare deposit transaction
+      const tx: TransactionParams = {
+        target: PROTOCOL_ADDRESS,
+        data: encodeFunctionData({
+          abi: protocolAbi,
+          functionName: "deposit",
+          args: [amountInWei, account],
+        }),
+      };
+      transactions.push(tx);
 
-     await notify("Waiting for transaction confirmation...");
+      await notify("Waiting for transaction confirmation...");
 
-     // Sign and send transaction
-     const result = await sign(chainId, account, txData);
-     const depositMessage = result.messages[result.messages.length - 1];
-     return toResult(
-       result.isMultisig
-         ? depositMessage
-         : `Successfully deposited ${amount} tokens. ${depositMessage}`
-     );
+      // Sign and send transaction
+      const result = await sendTransactions({ chainId, account, transactions });
+      const depositMessage = result.data[result.data.length - 1];
+
+      return toResult(
+        result.isMultisig
+          ? depositMessage.message
+          : `Successfully deposited ${amount} tokens. ${depositMessage.message}`
+      );
      ```
 
 5. **Returning Results**
@@ -76,11 +77,11 @@ Action functions perform transactions and interact with the blockchain. They use
    - Example:
 
      ```typescript
-     return toResult(
-       result.isMultisig
-         ? depositMessage
-         : `Successfully deposited ${amount} tokens. ${depositMessage}`
-     );
+      return toResult(
+        result.isMultisig
+          ? depositMessage.message
+          : `Successfully deposited ${amount} tokens. ${depositMessage.message}`
+      );
      ```
 
 6. **Comments and Documentation**

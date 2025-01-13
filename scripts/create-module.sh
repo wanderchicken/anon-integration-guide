@@ -12,7 +12,7 @@ DESCRIPTION=$2
 CHAINS=$3
 
 # Path to the projects directory
-BASE_PATH="../AnonIntegration/$MODULE_NAME"
+BASE_PATH="../projects/$MODULE_NAME"
 
 # Create directories
 echo "Creating directories..."
@@ -27,14 +27,22 @@ cat > "$BASE_PATH/package.json" << EOF
     "scripts": {
         "yarn": "yarn install"
     },
-    "license": "MIT"
+    "dependencies": {
+        "@heyanon/sdk": "^1.0.4"
+    },
+    "license": "MIT",
+    "engines": {
+        "npm": "please-use-yarn",
+        "node": ">=18.x",
+        "yarn": ">=1.22"
+    }
 }
 EOF
 
 # Create constants.ts
 echo "Creating constants.ts..."
 cat > "$BASE_PATH/constants.ts" << EOF
-import { ChainId } from 'libs/blockchain';
+import { ChainId } from '@heyanon/sdk';
 
 export const supportedChains = [$(echo $CHAINS | sed 's/,/, /g' | sed 's/\([A-Z,]*\)/ChainId.\1/g')];
 EOF
@@ -42,7 +50,7 @@ EOF
 # Create index.ts
 echo "Creating index.ts..."
 cat > "$BASE_PATH/index.ts" << EOF
-import { ProjectExport } from 'libs/adapters/types';
+import { AdapterExport } from '@heyanon/sdk'';
 import { tools } from './tools';
 import * as functions from './functions';
 
@@ -50,14 +58,13 @@ export default {
     tools,
     functions,
     description: '${DESCRIPTION}',
-} satisfies ProjectExport;
+} satisfies AdapterExport;
 EOF
 
 # Create tools.ts
 echo "Creating tools.ts..."
 cat > "$BASE_PATH/tools.ts" << EOF
-import { AiTool } from 'libs/ai';
-import { getChainName } from 'libs/blockchain';
+import { AiTool, getChainName } from '@heyanon/sdk';
 import { supportedChains } from './constants';
 
 export const tools: AiTool[] = [
@@ -140,12 +147,9 @@ cd "$BASE_PATH" && git init
 # Create functions/example.ts
 echo "Creating functions/example.ts..."
 cat > "$BASE_PATH/functions/example.ts" << EOF
-import { Address, encodeFunctionData, parseUnits } from 'viem';
-import { FunctionReturn, SystemTools, TransactionParams } from 'libs/adapters/types';
-import { toResult } from 'libs/adapters/transformers';
-import { getChainFromName } from 'libs/blockchain';
+import { Address, parseUnits } from 'viem';
+import { FunctionReturn, FunctionOptions, TransactionParams, toResult, getChainFromName, checkToApprove } from '@heyanon/sdk';
 import { supportedChains } from '../constants';
-import { checkToApprove } from 'libs/adapters/helpers';
 
 interface Props {
     chainName: string;
@@ -159,9 +163,7 @@ interface Props {
  * @param tools - System tools for blockchain interactions
  * @returns Transaction result
  */
-export async function example({ chainName, account, amount }: Props, tools: SystemTools): Promise<FunctionReturn> {
-    const { sign, notify } = tools;
-
+export async function example({ chainName, account, amount }: Props, { sendTransactions, notify }: FunctionOptions): Promise<FunctionReturn> {
     // Check wallet connection
     if (!account) return toResult('Wallet not connected', true);
 
@@ -176,22 +178,22 @@ export async function example({ chainName, account, amount }: Props, tools: Syst
 
     await notify('Preparing example transaction...');
 
-    const txData: TransactionParams[] = [];
+    const transactions: TransactionParams[] = [];
 
     // Example transaction
     const tx: TransactionParams = {
         target: '0x...',  // Protocol contract address
         data: '0x...',    // Encoded function call
     };
-    txData.push(tx);
+    transactions.push(tx);
 
     await notify('Waiting for transaction confirmation...');
 
     // Sign and send transaction
-    const result = await sign(chainId, account, txData);
-    const message = result.messages[result.messages.length - 1];
+    const result = await sendTransactions({ chainId, account, transactions });
+    const message = result.data[result.data.length - 1];
 
-    return toResult(result.isMultisig ? message : \`Successfully executed example with \${amount} tokens. \${message}\`);
+    return toResult(result.isMultisig ? message.message : \`Successfully executed example with \${amount} tokens. \${message.message}\`);
 }
 EOF
 
