@@ -6,7 +6,6 @@ Welcome to the technical documentation for developing additional project modules
 
 - [Introduction](./guides/introduction.md)
 - [Requirements](./guides/requirements.md)
-- [Common Imports](./guides/common-imports.md)
 - [Architecture and Design](./guides/architecture-and-design.md)
 - [Action Functions Implementation Guide](./guides/action-functions.md)
 - [Getter Functions Implementation Guide](./guides/getter-functions.md)
@@ -40,6 +39,8 @@ Example:
 
 ```bash
 ./create-module.sh example-protocol "Integration with Example Protocol" "ETHEREUM,ARBITRUM"
+cd projects/example-protocol
+yarn install
 ```
 
 The script will create:
