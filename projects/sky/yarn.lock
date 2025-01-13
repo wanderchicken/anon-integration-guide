@@ -122,10 +122,10 @@
   resolved "https://registry.yarnpkg.com/@esbuild/win32-x64/-/win32-x64-0.21.5.tgz#acad351d582d157bb145535db2a6ff53dd514b5c"
   integrity sha512-tQd/1efJuzPC6rCFwEvLtci/xNFcTZknmXs98FYDfGE4wP9ClFV98nyKrzJKVPMhdDnjzLhdUyMX4PsQAPjwIw==
 
-"@heyanon/sdk@^1.0.3":
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/@heyanon/sdk/-/sdk-1.0.3.tgz#4a9ef73c69fcbf94056bd89680bc199986dd8095"
-  integrity sha512-ZHDuIWEW+QtL/fXnw+BcWv5BdCJn1aJR9RkV7r9uEWYbUEuXoxNQXHwRaYLpJIJEG8Hb434DQvCUCS4ZAYfLSQ==
+"@heyanon/sdk@^1.0.4":
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/@heyanon/sdk/-/sdk-1.0.4.tgz#97c74d7b4c3c189acd1fda923f3e5dc141c680cc"
+  integrity sha512-OWWOjbKeUqCIlNQJy7R2ixVxL+1kFTM7gbvN4THArVyMw7bMif4iIk+ZCaeVKkKSBXtoVh7u03PzX10dPcLzVg==
   dependencies:
     "@real-wagmi/sdk" "^1.4.5"
     viem "^2.22.7"

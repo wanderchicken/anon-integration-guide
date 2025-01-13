@@ -8,7 +8,7 @@ interface Props {
     account: Address;
 }
 
-export async function exitSTR({ chainName, account }: Props, { signTransactions, getProvider, notify}: FunctionOptions): Promise<FunctionReturn> {
+export async function exitSTR({ chainName, account }: Props, { sendTransactions, getProvider, notify}: FunctionOptions): Promise<FunctionReturn> {
     if (!account) return toResult('Wallet not connected', true);
 
     const chainId = getChainFromName(chainName);
@@ -45,7 +45,7 @@ export async function exitSTR({ chainName, account }: Props, { signTransactions,
 
     await notify('Waiting for transaction confirmation...');
 
-    const result = await signTransactions({ chainId, account, transactions: [tx] });
+    const result = await sendTransactions({ chainId, account, transactions: [tx] });
     const exitMessage = result.data[result.data.length - 1];
 
     return toResult(result.isMultisig ? exitMessage.message : `Successfully exited from STR (withdrawn all + claimed rewards). ${exitMessage.message}`);

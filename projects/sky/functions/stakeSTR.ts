@@ -8,7 +8,7 @@ interface Props {
     account: Address;
     amount: string;
 }
-export async function stakeSTR({ chainName, account, amount }: Props, { signTransactions, getProvider, notify }: FunctionOptions): Promise<FunctionReturn> {
+export async function stakeSTR({ chainName, account, amount }: Props, { sendTransactions, getProvider, notify }: FunctionOptions): Promise<FunctionReturn> {
     if (!account) return toResult('Wallet not connected', true);
 
     const chainId = getChainFromName(chainName);
@@ -48,7 +48,7 @@ export async function stakeSTR({ chainName, account, amount }: Props, { signTran
 
     await notify('Waiting for transaction confirmation...');
 
-    const result = await signTransactions({ chainId, account, transactions });
+    const result = await sendTransactions({ chainId, account, transactions });
     const stakeMessage = result.data[result.data.length - 1];
 
     return toResult(result.isMultisig ? stakeMessage.message : `Successfully staked ${amount} USDS in STR. ${stakeMessage.message}`);

@@ -1,6 +1,6 @@
 # Action Functions Implementation Guide
 
-Action functions perform transactions and interact with the blockchain. They use the `signTransactions` function from `FunctionOptions` to execute transactions.
+Action functions perform transactions and interact with the blockchain. They use the `sendTransactions` function from `FunctionOptions` to execute transactions.
 
 ## Guidelines
 
@@ -25,7 +25,7 @@ Action functions perform transactions and interact with the blockchain. They use
 
 4. **Transaction Signing**
 
-   - Use the `signTransactions` function from `FunctionOptions` **once** in the function.
+   - Use the `sendTransactions` function from `FunctionOptions` **once** in the function.
    - Pass an array of transactions that need to be signed.
    - Example:
 
@@ -59,7 +59,7 @@ Action functions perform transactions and interact with the blockchain. They use
       await notify("Waiting for transaction confirmation...");
 
       // Sign and send transaction
-      const result = await signTransactions({ chainId, account, transactions });
+      const result = await sendTransactions({ chainId, account, transactions });
       const depositMessage = result.data[result.data.length - 1];
 
       return toResult(

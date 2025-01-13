@@ -9,7 +9,7 @@ interface Props {
     shares: string;
 }
 
-export async function redeemSSR({ chainName, account, shares }: Props, { signTransactions, getProvider }: FunctionOptions): Promise<FunctionReturn> {
+export async function redeemSSR({ chainName, account, shares }: Props, { sendTransactions, getProvider }: FunctionOptions): Promise<FunctionReturn> {
     if (!account) return toResult('Wallet not connected', true);
 
     const chainId = getChainFromName(chainName);
@@ -44,7 +44,7 @@ export async function redeemSSR({ chainName, account, shares }: Props, { signTra
         },
     ];
 
-    const result = await signTransactions({ chainId, account, transactions });
+    const result = await sendTransactions({ chainId, account, transactions });
     const redeemMessage = result.data[result.data.length - 1];
 
     return toResult(result.isMultisig ? redeemMessage.message : `Successfully redeemed ${shares} sUSDS. ${redeemMessage.message}`);

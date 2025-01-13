@@ -4,7 +4,7 @@
 
 - **Module Structure**: Each module must follow the established directory structure.
 - **Function Implementations**:
-  - **Action Functions**: Perform transactions and utilize the `signTransactions` function from `FunctionOptions`.
+  - **Action Functions**: Perform transactions and utilize the `sendTransactions` function from `FunctionOptions`.
   - **Getter Functions**: Retrieve data without performing transactions.
 - **Tools Implementation**: Provide a `tools.ts` file defining functions and their parameters for LLM integration, following the OpenAI function calling specification.
 - **Error Handling**: Functions must handle errors gracefully, using the `toResult` transformer for standardized responses.
@@ -34,8 +34,3 @@
   - 4 spaces indentation
   - Maximum line length 180 characters
 
-## Dependencies
-
-- **Blockchain Libraries**: Use existing libraries provided under `libs/blockchain`.
-- **Adapter Types**: Leverage types and interfaces from `libs/adapters/types.ts`.
-- **Common Utilities**: Utilize helper functions from `libs/adapters/helpers` and transformers from `libs/adapters/transformers`.

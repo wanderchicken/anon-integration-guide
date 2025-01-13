@@ -28,7 +28,7 @@ cat > "$BASE_PATH/package.json" << EOF
         "yarn": "yarn install"
     },
     "dependencies": {
-        "@heyanon/sdk": "^1.0.3"
+        "@heyanon/sdk": "^1.0.4"
     },
     "license": "MIT",
     "engines": {
@@ -163,7 +163,7 @@ interface Props {
  * @param tools - System tools for blockchain interactions
  * @returns Transaction result
  */
-export async function example({ chainName, account, amount }: Props, { signTransactions, notify }: FunctionOptions): Promise<FunctionReturn> {
+export async function example({ chainName, account, amount }: Props, { sendTransactions, notify }: FunctionOptions): Promise<FunctionReturn> {
     // Check wallet connection
     if (!account) return toResult('Wallet not connected', true);
 
@@ -190,7 +190,7 @@ export async function example({ chainName, account, amount }: Props, { signTrans
     await notify('Waiting for transaction confirmation...');
 
     // Sign and send transaction
-    const result = await signTransactions({ chainId, account, transactions });
+    const result = await sendTransactions({ chainId, account, transactions });
     const message = result.data[result.data.length - 1];
 
     return toResult(result.isMultisig ? message.message : \`Successfully executed example with \${amount} tokens. \${message.message}\`);

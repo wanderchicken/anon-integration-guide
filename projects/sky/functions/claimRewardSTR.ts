@@ -8,7 +8,7 @@ interface Props {
     account: Address;
 }
 
-export async function claimRewardSTR({ chainName, account }: Props, { signTransactions, notify, getProvider }: FunctionOptions): Promise<FunctionReturn> {
+export async function claimRewardSTR({ chainName, account }: Props, { sendTransactions, notify, getProvider }: FunctionOptions): Promise<FunctionReturn> {
     if (!account) return toResult('Wallet not connected', true);
 
     const chainId = getChainFromName(chainName);
@@ -43,7 +43,7 @@ export async function claimRewardSTR({ chainName, account }: Props, { signTransa
 
     await notify('Waiting for transaction confirmation...');
 
-    const result = await signTransactions({ chainId, account, transactions: [tx] });
+    const result = await sendTransactions({ chainId, account, transactions: [tx] });
     const claimMessage = result.data[result.data.length - 1];
 
     return toResult(result.isMultisig ? claimMessage.message : `Successfully claimed SKY rewards. ${claimMessage.message}`);

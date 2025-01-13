@@ -10,7 +10,7 @@ interface Props {
     referral?: number;
 }
 
-export async function depositSSR({ chainName, account, amount }: Props, { signTransactions, notify, getProvider }: FunctionOptions): Promise<FunctionReturn> {
+export async function depositSSR({ chainName, account, amount }: Props, { sendTransactions, notify, getProvider }: FunctionOptions): Promise<FunctionReturn> {
     if (!account) return toResult('Wallet not connected', true);
 
     const chainId = getChainFromName(chainName);
@@ -51,7 +51,7 @@ export async function depositSSR({ chainName, account, amount }: Props, { signTr
 
     await notify('Waiting for transaction confirmation...');
 
-    const result = await signTransactions({ chainId, account, transactions });
+    const result = await sendTransactions({ chainId, account, transactions });
     const depositMessage = result.data[result.data.length - 1];
 
     return toResult(result.isMultisig ? depositMessage.message : `Successfully deposited ${amount} USDS to SSR. ${depositMessage.message}`);

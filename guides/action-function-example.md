@@ -27,7 +27,7 @@ interface Props {
  */
 export async function deposit(
   { chainName, account, amount }: Props,
-  { signTransactions, notify, getProvider }: FunctionOptions
+  { sendTransactions, notify, getProvider }: FunctionOptions
 ): Promise<FunctionReturn> {
   // Check wallet connection
   if (!account) return toResult("Wallet not connected", true);
@@ -75,7 +75,7 @@ export async function deposit(
   await notify("Waiting for transaction confirmation...");
 
   // Sign and send transaction
-  const result = await signTransactions({ chainId, account, transactions });
+  const result = await sendTransactions({ chainId, account, transactions });
   const depositMessage = result.data[result.data.length - 1];
 
   return toResult(
@@ -90,7 +90,7 @@ export async function deposit(
 
 - Validates input arguments.
 - Uses `notify` to inform the user.
-- Calls `signTransactions` only once with the transaction array.
+- Calls `sendTransactions` only once with the transaction array.
 - Returns the result using `toResult`.
 - Includes JSDoc comments.
   </code_block_to_apply_changes_from>

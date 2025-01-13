@@ -42,7 +42,7 @@ export async function getRewardsExample({
 **Key Points**:
 
 - Validates input arguments.
-- Does not use `signTransactions`.
+- Does not use `sendTransactions`.
 - Ensures data returned does not exceed 500 tokens.
 - Returns the result using `toResult`.
 - Includes JSDoc comments.
