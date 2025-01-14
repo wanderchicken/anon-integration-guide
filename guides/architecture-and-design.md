@@ -43,5 +43,4 @@ your-module/
 - **Single Responsibility**: Each function should have a single purpose.
 - **Consistency**: Follow the same patterns and structures as existing modules.
 - **Reusability**: Utilize shared utilities and types to avoid duplication.
-- 
 - **Error Handling**: Centralize error handling using `toResult` and consistent messaging.
