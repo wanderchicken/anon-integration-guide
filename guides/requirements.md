@@ -7,6 +7,7 @@
   - **Action Functions**: Perform transactions and utilize the `sendTransactions` function from `FunctionOptions`.
   - **Getter Functions**: Retrieve data without performing transactions.
 - **Tools Implementation**: Provide a `tools.ts` file defining functions and their parameters for LLM integration, following the OpenAI function calling specification.
+- **HTTP requests**: Use the [Axios](https://axios-http.com/docs/intro)
 - **Error Handling**: Functions must handle errors gracefully, using the `toResult` transformer for standardized responses.
 - **Input Validation**: All functions must perform thorough input validation and provide informative error messages.
 - **Documentation**: Each module must include a `README.md` with a brief description and sample user questions.
@@ -33,4 +34,3 @@
   - Single quotes
   - 4 spaces indentation
   - Maximum line length 180 characters
-
