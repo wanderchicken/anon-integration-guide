@@ -2,7 +2,7 @@
 
 ## Overview
 
-Each module's README.md should provide a clear overview of the protocol's functionality and include practical examples of tasks that users can perform.
+Each module's README.md should provide a clear overview of the protocol's functionality and include practical examples of tasks that users can perform.Think of 10-20 prompts that users might use your protocol with. Also list pain points that Anon can solve.
 
 ## Structure
 

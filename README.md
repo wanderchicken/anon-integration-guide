@@ -105,19 +105,12 @@ All modules must be placed in the [projects](./projects) directory. This ensures
 ### Mainnet Networks
 
 - ETHEREUM (Ethereum Mainnet, 1)
-- OPTIMISM (Optimism, 10)
 - BSC (BNB Smart Chain, 56)
-- POLYGON (Polygon, 137)
-- FANTOM (Fantom, 250)
-- ZKSYNC (zkSync Era, 324)
-- METIS (Metis, 1088)
 - KAVA (Kava EVM, 2222)
 - BASE (Base, 8453)
 - IOTA (IOTA EVM, 1074)
 - AVALANCHE (Avalanche C-Chain, 43114)
 - ARBITRUM (Arbitrum One, 42161)
-- GNOSIS (Gnosis Chain, 100)
-- SCROLL (Scroll, 534352)
 - SONIC (Sonic, 146)
 
 ### Testnet Networks
