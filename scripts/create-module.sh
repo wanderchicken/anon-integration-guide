@@ -18,6 +18,13 @@ BASE_PATH="../projects/$MODULE_NAME"
 echo "Creating directories..."
 mkdir -p "$BASE_PATH"/{abis,functions}
 
+# Create .gitignore
+
+echo "Creating .gitignore..."
+cat > "$BASE_PATH/.gitignore" << EOF
+node_modules
+EOF
+
 # Create package.json
 echo "Creating package.json..."
 cat > "$BASE_PATH/package.json" << EOF
