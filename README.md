@@ -2,7 +2,7 @@
 
 Welcome to the technical documentation for developing additional project modules for the HeyAnon AI Chatbot.
 
-[Fast track terms](https://docs.google.com/document/d/1kojp1v63jb2yTgs38yIMo-QOppwQBTTwAmFfipFHqGU/edit?tab=t.0)
+[Fast track terms](./guides/fast-track-terms.md)
 
 ## Contents
 
