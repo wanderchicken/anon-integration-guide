@@ -1,0 +1,12 @@
+name: Branch Protection Rules
+
+rules:
+  - pattern: "**"
+    protect: true
+    enforce_admins: false
+    required_pull_request_reviews:
+      required_approving_review_count: 1
+    restrictions:
+      teams: ["project-admin"]
+    path_restrictions:
+      - "projects/**/*"
