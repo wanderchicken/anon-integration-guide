@@ -1,94 +1,66 @@
-export const lidoAbi = [
-  // Staking
+const lidoAbi = [
   {
-    inputs: [{ name: "_referral", type: "address" }],
-    name: "submit",
-    outputs: [{ name: "", type: "uint256" }],
-    payable: true,
-    stateMutability: "payable",
-    type: "function"
-  },
-  
-  // Withdrawal
-  {
-    inputs: [{ name: "amounts", type: "uint256[]" }],
-    name: "requestWithdrawals",
-    outputs: [{ 
-      name: "requestId", 
-      type: "uint256" 
-    }],
-    stateMutability: "nonpayable",
-    type: "function"
-  },
-  
-  // Balance checks
-  {
-    inputs: [{ name: "_account", type: "address" }],
-    name: "balanceOf",
-    outputs: [{ name: "", type: "uint256" }],
+    inputs: [
+      { internalType: "address", name: "owner", type: "address" },
+      { internalType: "address", name: "spender", type: "address" },
+    ],
+    name: "allowance",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
     stateMutability: "view",
-    type: "function"
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "address", name: "spender", type: "address" },
+      { internalType: "uint256", name: "amount", type: "uint256" },
+    ],
+    name: "approve",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "uint256", name: "amount", type: "uint256" }],
+    name: "submit",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function",
   },
   {
     inputs: [],
     name: "getTotalPooledEther",
-    outputs: [{ name: "", type: "uint256" }],
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
     stateMutability: "view",
-    type: "function"
-  },
-  
-  // Rate and APR
-  {
-    inputs: [],
-    name: "getAPR",
-    outputs: [{ name: "", type: "uint256" }],
-    stateMutability: "view",
-    type: "function"
+    type: "function",
   },
   {
     inputs: [],
-    name: "getStETHByWstETH",
-    outputs: [{ name: "", type: "uint256" }],
+    name: "getSharesByPooledEth",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
     stateMutability: "view",
-    type: "function"
-  },
-   // unstake
-  {
-    inputs: [{ name: "_amount", type: "uint256" }],
-    name: "unstake",
-    outputs: [{ name: "", type: "bool" }],
-    stateMutability: "nonpayable",
-    type: "function"
-  },
-  
-  //claim Rewards
-  {
-    inputs: [{ name: "_account", type: "address" }],
-    name: "claimRewards",
-    outputs: [{ name: "", type: "bool" }],
-    stateMutability: "nonpayable",
-    type: "function"
-  },
-  
-  // Events
-  {
-    anonymous: false,
-    inputs: [
-      { indexed: true, name: "sender", type: "address" },
-      { indexed: false, name: "amount", type: "uint256" },
-      { indexed: false, name: "referral", type: "address" }
-    ],
-    name: "Submitted",
-    type: "event"
+    type: "function",
   },
   {
-    anonymous: false,
-    inputs: [
-      { indexed: true, name: "requestId", type: "uint256" },
-      { indexed: true, name: "requestor", type: "address" },
-      { indexed: false, name: "amount", type: "uint256" }
-    ],
-    name: "WithdrawalRequested",
-    type: "event"
-  }
+    inputs: [],
+    name: "getPooledEthByShares",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "balanceOf",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "decimals",
+    outputs: [{ internalType: "uint8", name: "", type: "uint8" }],
+    stateMutability: "view",
+    type: "function",
+  },
 ];
+
+export default lidoAbi;
