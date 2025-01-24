@@ -1,16 +1,17 @@
-import { Address, encodeFunctionData, decodeFunctionResult } from "viem";
+import { Address, decodeFunctionResult, encodeFunctionData } from "viem";
 import { FunctionReturn, FunctionOptions, toResult, getChainFromName } from "@heyanon/sdk";
 import { supportedChains, stETH_ADDRESS } from "../constants";
 import  lidoAbi  from "../abis/lidoAbi";
 
-interface GetBalanceProps {
+interface TotalRewardsProps {
   chainName: string;
   account: Address;
+  initialStakedAmount: string; // Amount of ETH initially staked
 }
 
-export async function getStETHBalance(
-  { chainName, account }: GetBalanceProps,
-  { sendTransactions }: FunctionOptions
+export async function getTotalRewardsEarned(
+  { chainName, account, initialStakedAmount }: TotalRewardsProps,
+  { sendTransactions, notify }: FunctionOptions
 ): Promise<FunctionReturn> {
   if (!account) return toResult("Wallet not connected", true);
 
@@ -20,6 +21,9 @@ export async function getStETHBalance(
   }
 
   try {
+    await notify("Fetching your stETH balance...");
+
+    // Encode the balanceOf call
     const balanceData = encodeFunctionData({
       abi: lidoAbi,
       functionName: "balanceOf",
@@ -37,6 +41,7 @@ export async function getStETHBalance(
       ],
     });
 
+    // Safely cast to the appropriate type
     const rawBalanceData = result.data[0] as unknown as `0x${string}`;
     const balance = decodeFunctionResult({
       abi: lidoAbi,
@@ -44,10 +49,16 @@ export async function getStETHBalance(
       data: rawBalanceData,
     }) as [bigint];
 
-    return toResult(balance[0].toString());
+    // Convert balance from WEI to ETH
+    const currentBalance = Number(balance[0]) / 10 ** 18; // Convert bigint to number for calculations
+    const initialStaked = parseFloat(initialStakedAmount);
+
+    const totalRewards = currentBalance - initialStaked;
+
+    return toResult(`Total Rewards Earned: ${totalRewards.toFixed(4)} ETH`);
   } catch (error) {
     return toResult(
-      `Failed to get stETH balance: ${error instanceof Error ? error.message : "Unknown error"}`,
+      `Failed to fetch total rewards: ${error instanceof Error ? error.message : "Unknown error"}`,
       true
     );
   }
