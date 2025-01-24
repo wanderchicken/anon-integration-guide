@@ -6,5 +6,5 @@ export default {
   tools,
   functions,
   description:
-    'Lido is a liquid staking protocol that allows users to stake their cryptocurrency tokens while maintaining liquidity',
+    'Lido is liquid staking protocol that allows users to stake their cryptocurrency tokens while maintaining liquidity',
 } satisfies AdapterExport;
