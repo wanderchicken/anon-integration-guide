@@ -1,51 +1,34 @@
 const withdrawalAbi = [
   {
     inputs: [
-      { internalType: "uint256", name: "amount", type: "uint256" },
+      { internalType: "uint256[]", name: "_amounts", type: "uint256[]" },
+      { internalType: "address", name: "_owner", type: "address" },
     ],
-    name: "requestWithdrawal",
+    name: "requestWithdrawals",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
   },
   {
     inputs: [
-      { internalType: "uint256", name: "withdrawalId", type: "uint256" },
+      { internalType: "uint256[]", name: "_requestIds", type: "uint256[]" },
+      { internalType: "address", name: "_receiver", type: "address" },
     ],
-    name: "claimWithdrawal",
+    name: "claimWithdrawals",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
   },
   {
     inputs: [
-      { internalType: "uint256", name: "withdrawalId", type: "uint256" },
+      { internalType: "uint256", name: "_requestId", type: "uint256" }
     ],
-    name: "getWithdrawalDetails",
+    name: "getWithdrawalStatus",
     outputs: [
-      { internalType: "address", name: "account", type: "address" },
-      { internalType: "uint256", name: "amount", type: "uint256" },
-      { internalType: "uint256", name: "timestamp", type: "uint256" },
-      { internalType: "bool", name: "claimed", type: "bool" },
+      { internalType: "bool", name: "isProcessed", type: "bool" }
     ],
     stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "cooldownDuration",
-    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [{ internalType: "address", name: "account", type: "address" }],
-    name: "getPendingWithdrawals",
-    outputs: [
-      { internalType: "uint256[]", name: "withdrawalIds", type: "uint256[]" },
-    ],
-    stateMutability: "view",
-    type: "function",
+    type: "function"
   },
 ];
 

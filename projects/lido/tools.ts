@@ -108,7 +108,7 @@ export const tools: AiTool[] = [
         ],
     },
     {
-        name: 'requestWithdrawal',
+        name: 'requestWithdrawStETH',
         description: 'Request a withdrawal of stETH back to ETH',
         required: ['chainName', 'account', 'amount'],
         props: [
@@ -131,9 +131,9 @@ export const tools: AiTool[] = [
         ],
     },
     {
-        name: 'claimWithdrawal',
+        name: 'claimWithdrawStETH',
         description: 'Claim a pending withdrawal of ETH',
-        required: ['chainName', 'account', 'withdrawalId'],
+        required: ['chainName', 'account', 'requestIds'],
         props: [
             {
                 name: 'chainName',
@@ -147,14 +147,14 @@ export const tools: AiTool[] = [
                 description: 'The account address claiming the withdrawal',
             },
             {
-                name: 'withdrawalId',
+                name: 'requestIds',
                 type: 'string',
-                description: 'The ID of the withdrawal to claim',
+                description: 'The IDs of the withdrawal to claim',
             },
         ],
     },
     {
-        name: 'getWstETHForStETH',
+        name: 'getWstETHByStETH',
         description: 'Calculate how much wstETH you get for a given stETH amount',
         required: ['chainName', 'amount'],
         props: [
@@ -172,7 +172,7 @@ export const tools: AiTool[] = [
         ],
     },
     {
-        name: 'getStETHForWstETH',
+        name: 'getStETHByWstETH',
         description: 'Calculate how much stETH you get for a given wstETH amount',
         required: ['chainName', 'amount'],
         props: [
@@ -203,32 +203,32 @@ export const tools: AiTool[] = [
         ],
     },
     {
-        name: 'unlockStETH',
-        description: 'Unlock stETH for a specific account to enable interactions',
+        name: 'approveStETH',
+        description: 'Approve a spender to transfer stETH on behalf of the user',
         required: ['chainName', 'account', 'amount'],
         props: [
             {
                 name: 'chainName',
                 type: 'string',
                 enum: supportedChains,
-                description: 'The blockchain network to perform the unlocking',
+                description: 'The blockchain network to perform the approval',
             },
             {
                 name: 'account',
                 type: 'string',
-                description: 'The account address unlocking stETH',
+                description: 'The account address approving the spender',
             },
             {
                 name: 'amount',
                 type: 'string',
-                description: 'The amount of stETH to unlock',
+                description: 'The amount of stETH to approve',
             },
         ],
     },
     {
-        name: 'getStETHAllowance',
+        name: 'checkAllowance',
         description: 'Retrieve the allowance of stETH for a specific spender',
-        required: ['chainName', 'account', 'spender'],
+        required: ['chainName', 'account'],
         props: [
             {
                 name: 'chainName',
@@ -241,17 +241,12 @@ export const tools: AiTool[] = [
                 type: 'string',
                 description: 'The account address to query for allowance',
             },
-            {
-                name: 'spender',
-                type: 'string',
-                description: 'The spender address to check the allowance for',
-            },
         ],
     },
     {
         name: 'getTotalRewardsEarned',
         description: 'Calculate the total rewards earned for stETH staking',
-        required: ['chainName', 'account', 'initialStakedAmount'],
+        required: ['chainName', 'account'],
         props: [
             {
                 name: 'chainName',
@@ -264,32 +259,23 @@ export const tools: AiTool[] = [
                 type: 'string',
                 description: 'The account address to query rewards for',
             },
-            {
-                name: 'initialStakedAmount',
-                type: 'string',
-                description: 'The initial amount of ETH staked',
-            },
         ],
     },
     {
-        name: 'calculateAPR',
-        description: 'Calculate the APR (Annual Percentage Rate) based on rewards earned',
-        required: ['initialStakedAmount', 'rewardsEarned', 'periodInDays'],
+        name: 'getAverageAPR',
+        description: 'Calculate the average APR (Annual Percentage Rate) based on rewards earned',
+        required: ['chainName', 'account'],
         props: [
             {
-                name: 'initialStakedAmount',
+                name: 'chainName',
                 type: 'string',
-                description: 'The initial amount of ETH staked',
+                enum: supportedChains,
+                description: 'The blockchain network to query',
             },
             {
-                name: 'rewardsEarned',
+                name: 'account',
                 type: 'string',
-                description: 'The total rewards earned in ETH',
-            },
-            {
-                name: 'periodInDays',
-                type: 'number',
-                description: 'The number of days over which rewards were earned',
+                description: 'The account address to query APR for',
             },
         ],
     },
