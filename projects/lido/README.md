@@ -62,14 +62,7 @@ Lido is a decentralized liquid staking protocol for Ethereum that allows users t
 | `approveStETH`          | Approve a spender to transfer stETH                     |
 | `checkAllowance`        | Retrieve the allowance of stETH for a specific spender  |
 | `getTotalRewardsEarned` | Calculate total rewards earned from stETH staking       |
-| `getAverageAPR`         | Calculate the average APR based on rewards earned       |
-
-## **Contracts and Transactions**
-
-- Liquid staking contract: [Etherscan](https://etherscan.io/address/0xe5da20f15420ad15de0fa650600afc998bbe3955)
-- Stake ETH TX (`stake`): [Etherscan](https://etherscan.io/tx/0x19545670b77c9ab7e1eabdab292c1aa9d0abd6e11777ab3147f343cb900c728b)
-- Unstake TX (`unstake`): [Etherscan](https://etherscan.io/tx/0xb64c4fd6ae4667a3b7ce9d6ba9679fbd2c591173a0895a5616adc3b039b10c27)
-- Claim withdrawal TX (`claimWithdrawal`): [Etherscan](https://etherscan.io/tx/0xb93b07384ccbace4236d07fac46874039821c84707f69fbee101e9ae5506f470)
+| `getLidoAPR`            | Fetches the latest Lido APR from the official Lido API  |
 
 ## **Installation**
 

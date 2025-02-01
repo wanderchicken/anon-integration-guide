@@ -263,21 +263,16 @@ export const tools: AiTool[] = [
     ],
   },
   {
-    name: 'getAverageAPR',
+    name: 'getLidoAPR',
     description:
-      'Calculate the average APR (Annual Percentage Rate) based on rewards earned',
-    required: ['chainName', 'account'],
+      'Fetches the latest Lido APR from the official Lido API',
+    required: ['chainName'],
     props: [
       {
         name: 'chainName',
         type: 'string',
         enum: supportedChains,
         description: 'The blockchain network to query',
-      },
-      {
-        name: 'account',
-        type: 'string',
-        description: 'The account address to query APR for',
       },
     ],
   },

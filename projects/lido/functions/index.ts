@@ -11,4 +11,4 @@ export { getTotalStaked } from './getTotalStaked';
 export { approveStETH } from './approveStETH';
 export { checkAllowance } from './checkAllowance';
 export { getTotalRewardsEarned } from './getTotalRewardsEarned';
-export { getAverageAPR } from './getAverageAPR';
+export { getLidoAPR } from './getLidoAPR';
