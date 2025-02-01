@@ -1,7 +1,12 @@
-import { Address, encodeFunctionData, parseEther } from "viem";
-import { FunctionReturn, FunctionOptions, toResult, getChainFromName } from "@heyanon/sdk";
-import { supportedChains, LIDO_WITHDRAWAL_ADDRESS } from "../constants";
-import withdrawalAbi from "../abis/withdrawalAbi";
+import { Address, encodeFunctionData, parseEther } from 'viem';
+import {
+  FunctionReturn,
+  FunctionOptions,
+  toResult,
+  getChainFromName,
+} from '@heyanon/sdk';
+import { supportedChains, LIDO_WITHDRAWAL_ADDRESS } from '../constants';
+import withdrawalAbi from '../abis/withdrawalAbi';
 
 interface WithdrawProps {
   chainName: string; // Name of the blockchain network (e.g., "Ethereum")
@@ -19,7 +24,7 @@ export async function requestWithdrawStETH(
   { chainName, account, amount }: WithdrawProps,
   { sendTransactions, notify }: FunctionOptions
 ): Promise<FunctionReturn> {
-  if (!account) return toResult("Wallet not connected", true);
+  if (!account) return toResult('Wallet not connected', true);
 
   // Get the chain ID from the chain name
   const chainId = getChainFromName(chainName);
@@ -39,18 +44,29 @@ export async function requestWithdrawStETH(
       target: LIDO_WITHDRAWAL_ADDRESS as `0x${string}`, // Lido withdrawal contract address
       data: encodeFunctionData({
         abi: withdrawalAbi, // ABI of the Lido withdrawal contract
-        functionName: "requestWithdrawals", // Function to call for requesting withdrawal
+        functionName: 'requestWithdrawals', // Function to call for requesting withdrawal
         args: [[amountInWei], account], // Withdrawal amount and recipient address
       }),
     };
 
     // Send the transaction to initiate the withdrawal request
-    const result = await sendTransactions({ chainId, account, transactions: [tx] });
+    const result = await sendTransactions({
+      chainId,
+      account,
+      transactions: [tx],
+    });
 
     // Return success message
-    return toResult(`Withdrawal request submitted. Transaction: ${result.data}`);
+    return toResult(
+      `Withdrawal request submitted. Transaction: ${result.data}`
+    );
   } catch (error) {
     // Handle errors during the withdrawal request process
-    return toResult(`Failed to request withdrawal: ${error instanceof Error ? error.message : "Unknown error"}`, true);
+    return toResult(
+      `Failed to request withdrawal: ${
+        error instanceof Error ? error.message : 'Unknown error'
+      }`,
+      true
+    );
   }
 }

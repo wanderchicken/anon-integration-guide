@@ -1,7 +1,12 @@
-import { Address, encodeFunctionData,parseEther } from "viem";
-import { FunctionReturn, FunctionOptions, toResult, getChainFromName } from "@heyanon/sdk";
-import { supportedChains, LIDO_WITHDRAWAL_ADDRESS } from "../constants";
-import withdrawalAbi from "../abis/withdrawalAbi";
+import { Address, encodeFunctionData, parseEther } from 'viem';
+import {
+  FunctionReturn,
+  FunctionOptions,
+  toResult,
+  getChainFromName,
+} from '@heyanon/sdk';
+import { supportedChains, LIDO_WITHDRAWAL_ADDRESS } from '../constants';
+import withdrawalAbi from '../abis/withdrawalAbi';
 
 interface ClaimWithdrawalProps {
   chainName: string; // Name of the blockchain network (e.g., "Ethereum")
@@ -17,9 +22,9 @@ interface ClaimWithdrawalProps {
  */
 export async function claimWithdrawStETH(
   { chainName, account, requestIds }: ClaimWithdrawalProps,
-  { sendTransactions, notify,getProvider }: FunctionOptions
+  { sendTransactions, notify, getProvider }: FunctionOptions
 ): Promise<FunctionReturn> {
-  if (!account) return toResult("Wallet not connected", true);
+  if (!account) return toResult('Wallet not connected', true);
 
   // Get the chain ID from the chain name
   const chainId = getChainFromName(chainName);
@@ -35,41 +40,58 @@ export async function claimWithdrawStETH(
     const claimableEthValues = await publicClient.readContract({
       address: LIDO_WITHDRAWAL_ADDRESS,
       abi: withdrawalAbi,
-      functionName: "getClaimableEther",
+      functionName: 'getClaimableEther',
       args: [requestIds, hints],
     });
 
     if (!Array.isArray(claimableEthValues)) {
-      return toResult("Invalid response from contract: expected array of claimable ETH values.", true);
+      return toResult(
+        'Invalid response from contract: expected array of claimable ETH values.',
+        true
+      );
     }
 
     // Sum all claimable ETH
-    const totalClaimable = claimableEthValues.reduce((sum, value) => sum + BigInt(value), 0n);
+    const totalClaimable = claimableEthValues.reduce(
+      (sum, value) => sum + BigInt(value),
+      0n
+    );
 
     if (totalClaimable === 0n) {
-      return toResult("No claimable ETH available.", true);
+      return toResult('No claimable ETH available.', true);
     }
 
     // Notify the user about the claim process
-    await notify(`Claiming ETH for withdrawal request IDs: ${requestIds.join(", " )}...`);
+    await notify(
+      `Claiming ETH for withdrawal request IDs: ${requestIds.join(', ')}...`
+    );
 
     // Prepare the claim transaction
     const tx = {
       target: LIDO_WITHDRAWAL_ADDRESS as `0x${string}`, // Lido withdrawal contract address
       data: encodeFunctionData({
         abi: withdrawalAbi, // ABI of the Lido withdrawal contract
-        functionName: "claimWithdrawals", // Function to call
+        functionName: 'claimWithdrawals', // Function to call
         args: [requestIds, account], // Withdrawal request IDs and recipient address
       }),
     };
 
     // Send the transaction to claim the ETH
-    const result = await sendTransactions({ chainId, account, transactions: [tx] });
+    const result = await sendTransactions({
+      chainId,
+      account,
+      transactions: [tx],
+    });
 
     // Return success message
     return toResult(`Withdrawal claimed. Transaction: ${result.data}`);
   } catch (error) {
     // Handle errors during the claim process
-    return toResult(`Failed to claim withdrawal: ${error instanceof Error ? error.message : "Unknown error"}`, true);
+    return toResult(
+      `Failed to claim withdrawal: ${
+        error instanceof Error ? error.message : 'Unknown error'
+      }`,
+      true
+    );
   }
 }

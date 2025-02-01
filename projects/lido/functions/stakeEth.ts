@@ -1,20 +1,13 @@
-import { 
-  Address, 
-  encodeFunctionData,
-  parseEther 
-} from "viem";
-import { 
-  FunctionReturn, 
-  FunctionOptions, 
-  TransactionParams, 
-  toResult, 
+import { Address, encodeFunctionData, parseEther } from 'viem';
+import {
+  FunctionReturn,
+  FunctionOptions,
+  TransactionParams,
+  toResult,
   getChainFromName,
-} from "@heyanon/sdk";
-import { 
-  supportedChains, 
-  stETH_ADDRESS 
-} from "../constants";
-import stEthAbi from "../abis/stEthAbi";
+} from '@heyanon/sdk';
+import { supportedChains, stETH_ADDRESS } from '../constants';
+import stEthAbi from '../abis/stEthAbi';
 
 interface Props {
   chainName: string; // Name of the blockchain network (e.g., "Ethereum")
@@ -34,7 +27,7 @@ export async function stakeETH(
 ): Promise<FunctionReturn> {
   // Check if the wallet is connected
   if (!account) {
-    return toResult("Wallet not connected", true);
+    return toResult('Wallet not connected', true);
   }
 
   // Get the chain ID from the chain name
@@ -50,7 +43,7 @@ export async function stakeETH(
 
   // Validate the stake amount
   if (!amount || parseFloat(amount) <= 0) {
-    return toResult("Invalid stake amount", true);
+    return toResult('Invalid stake amount', true);
   }
 
   try {
@@ -65,14 +58,14 @@ export async function stakeETH(
       target: stETH_ADDRESS, // Address of the Lido stETH contract
       data: encodeFunctionData({
         abi: stEthAbi, // ABI of the Lido stETH contract
-        functionName: "submit", // Function to call (stake ETH)
+        functionName: 'submit', // Function to call (stake ETH)
         args: [account], // Arguments for the function (recipient address)
       }),
       value: amountInWei, // Amount of ETH to send (in wei)
     };
 
     // Notify the user that the transaction is being processed
-    await notify("Waiting for transaction confirmation...");
+    await notify('Waiting for transaction confirmation...');
 
     // Send the transaction to the blockchain
     const result = await sendTransactions({
@@ -86,14 +79,16 @@ export async function stakeETH(
 
     // Return a success message
     return toResult(
-      result.isMultisig 
+      result.isMultisig
         ? stakeMessage.message // If multisig, return the multisig message
         : `Successfully staked ${amount} ETH. ${stakeMessage.message}` // Otherwise, return a success message
     );
   } catch (error) {
     // Handle any errors that occur during the staking process
     return toResult(
-      `Failed to stake ETH: ${error instanceof Error ? error.message : "Unknown error"}`,
+      `Failed to stake ETH: ${
+        error instanceof Error ? error.message : 'Unknown error'
+      }`,
       true
     );
   }

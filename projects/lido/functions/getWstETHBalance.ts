@@ -1,7 +1,12 @@
-import { Address, formatUnits } from "viem";
-import { FunctionReturn, FunctionOptions, toResult, getChainFromName } from "@heyanon/sdk";
-import { supportedChains, wstETH_ADDRESS } from "../constants";
-import wstEthAbi from "../abis/wstEthAbi";
+import { Address, formatUnits } from 'viem';
+import {
+  FunctionReturn,
+  FunctionOptions,
+  toResult,
+  getChainFromName,
+} from '@heyanon/sdk';
+import { supportedChains, wstETH_ADDRESS } from '../constants';
+import wstEthAbi from '../abis/wstEthAbi';
 
 interface StEthInfoProps {
   chainName: string;
@@ -15,7 +20,7 @@ export async function getWstETHBalance(
   { chainName, account }: StEthInfoProps,
   { getProvider }: FunctionOptions
 ): Promise<FunctionReturn> {
-  if (!account) return toResult("Wallet not connected", true);
+  if (!account) return toResult('Wallet not connected', true);
 
   const chainId = getChainFromName(chainName);
   if (!chainId || !supportedChains.includes(chainId)) {
@@ -24,15 +29,20 @@ export async function getWstETHBalance(
 
   try {
     const publicClient = getProvider(chainId);
-    const balance = await publicClient.readContract({
+    const balance = (await publicClient.readContract({
       address: wstETH_ADDRESS,
       abi: wstEthAbi,
-      functionName: "balanceOf",
+      functionName: 'balanceOf',
       args: [account],
-    }) as bigint
+    })) as bigint;
 
     return toResult(`wstETH Balance: ${formatUnits(balance, 18)} wstETH`);
   } catch (error) {
-    return toResult(`Failed to fetch wstETH balance: ${error instanceof Error ? error.message : "Unknown error"}`, true);
+    return toResult(
+      `Failed to fetch wstETH balance: ${
+        error instanceof Error ? error.message : 'Unknown error'
+      }`,
+      true
+    );
   }
 }

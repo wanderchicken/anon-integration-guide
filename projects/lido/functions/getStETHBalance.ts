@@ -1,5 +1,10 @@
 import { Address, formatUnits } from 'viem';
-import { FunctionReturn, toResult, getChainFromName, FunctionOptions } from '@heyanon/sdk';
+import {
+  FunctionReturn,
+  toResult,
+  getChainFromName,
+  FunctionOptions,
+} from '@heyanon/sdk';
 import { supportedChains, stETH_ADDRESS } from '../constants';
 import stEthAbi from '../abis/stEthAbi';
 
@@ -51,7 +56,9 @@ export async function getStETHBalance(
   } catch (error) {
     // Handle any errors that occur during the contract call
     return toResult(
-      `Failed to get stETH balance: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      `Failed to get stETH balance: ${
+        error instanceof Error ? error.message : 'Unknown error'
+      }`,
       true
     );
   }

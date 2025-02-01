@@ -1,6 +1,11 @@
-import { FunctionReturn, FunctionOptions, toResult, getChainFromName } from "@heyanon/sdk";
-import { supportedChains, stETH_ADDRESS } from "../constants";
-import stEthAbi from "../abis/stEthAbi";
+import {
+  FunctionReturn,
+  FunctionOptions,
+  toResult,
+  getChainFromName,
+} from '@heyanon/sdk';
+import { supportedChains, stETH_ADDRESS } from '../constants';
+import stEthAbi from '../abis/stEthAbi';
 
 interface Props {
   chainName: string; // Name of the blockchain network (e.g., "Ethereum")
@@ -29,16 +34,16 @@ export async function getTotalStaked(
 
   try {
     // Notify the user that the process is starting
-    await notify("Fetching total staked ETH in Lido...");
+    await notify('Fetching total staked ETH in Lido...');
 
     // Get the provider (public client) for the specified chain
     const publicClient = getProvider(chainId);
 
     // Read the total staked ETH from the Lido contract
     const totalStaked = await publicClient.readContract({
-      address: stETH_ADDRESS, 
-      abi: stEthAbi, 
-      functionName: "getTotalPooledEther",
+      address: stETH_ADDRESS,
+      abi: stEthAbi,
+      functionName: 'getTotalPooledEther',
     });
 
     // Convert the total staked amount from wei to ETH
@@ -49,7 +54,9 @@ export async function getTotalStaked(
   } catch (error) {
     // Handle any errors that occur during the process
     return toResult(
-      `Failed to fetch total staked ETH: ${error instanceof Error ? error.message : "Unknown error"}`,
+      `Failed to fetch total staked ETH: ${
+        error instanceof Error ? error.message : 'Unknown error'
+      }`,
       true
     );
   }
