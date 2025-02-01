@@ -15,7 +15,7 @@ interface StEthInfoProps {
 }
 
 /**
- * Fetches the total rewards earned by the user on Lido (stETH balance - initial stake).
+ * Fetches the total rewards earned by the user on Lido using sharesOf.
  */
 export async function getTotalRewardsEarned(
   { chainName, account }: StEthInfoProps,
@@ -55,38 +55,33 @@ export async function getTotalRewardsEarned(
       args: [wstEthBalance],
     })) as bigint;
 
-    // Fetch the first deposit event logs to determine initial staked amount
-    const depositLogs = await publicClient.getLogs({
+    // Fetch user's shares
+    const userShares = (await publicClient.readContract({
       address: stETH_ADDRESS,
-      event: {
-        name: 'Transfer',
-        type: 'event',
-        inputs: [
-          { type: 'address', name: 'from', indexed: true },
-          { type: 'address', name: 'to', indexed: true },
-          { type: 'uint256', name: 'value' },
-        ],
-      },
-      fromBlock: 0n,
-      toBlock: 'latest',
-      args: {
-        to: account as `0x${string}`,
-        from: '0x0000000000000000000000000000000000000000' as `0x${string}`,
-      },
-    });
+      abi: stEthAbi,
+      functionName: 'sharesOf',
+      args: [account],
+    })) as bigint;
 
-    if (!Array.isArray(depositLogs) || depositLogs.length === 0) {
-      return toResult('No initial staked amount found.', true);
-    }
+    // Get total pooled ETH in Lido
+    const totalPooledEther = (await publicClient.readContract({
+      address: stETH_ADDRESS,
+      abi: stEthAbi,
+      functionName: 'getTotalPooledEther',
+    })) as bigint;
 
-    const firstDeposit = depositLogs[0];
-    const initialStakedAmount = firstDeposit.data
-      ? BigInt(firstDeposit.data)
-      : 0n;
+    // Get total shares issued by Lido
+    const totalShares = (await publicClient.readContract({
+      address: stETH_ADDRESS,
+      abi: stEthAbi,
+      functionName: 'getTotalShares',
+    })) as bigint;
+
+    // Calculate initial staked amount using shares formula
+    const initialStakedAmount = (userShares * totalPooledEther) / totalShares;
 
     // Calculate total rewards earned (stETH + converted wstETH - initial stake)
-    const totalRewards =
-      BigInt(stEthBalance) + BigInt(convertedStEth) - initialStakedAmount;
+    const totalRewards = BigInt(stEthBalance) + BigInt(convertedStEth) - initialStakedAmount;
 
     return toResult(
       `Total Rewards Earned: ${formatUnits(totalRewards, 18)} stETH`
