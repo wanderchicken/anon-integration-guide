@@ -32,7 +32,7 @@ export async function approveStETH(
         target: stETH_ADDRESS as `0x${string}`,
         data: encodeFunctionData({
           abi: stEthAbi,
-          functionName: "approve",
+          functionName: 'approve',
           args: [wstETH_ADDRESS, amountInWei],
         }),
       };
