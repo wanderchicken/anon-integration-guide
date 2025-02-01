@@ -1,64 +1,96 @@
-import { Address, decodeFunctionResult, encodeFunctionData } from "viem";
-import { FunctionReturn, FunctionOptions, toResult, getChainFromName } from "@heyanon/sdk";
-import { supportedChains, stETH_ADDRESS } from "../constants";
-import  lidoAbi  from "../abis/lidoAbi";
+import { Address, formatUnits } from 'viem';
+import {
+  FunctionReturn,
+  FunctionOptions,
+  toResult,
+  getChainFromName,
+} from '@heyanon/sdk';
+import { supportedChains, stETH_ADDRESS, wstETH_ADDRESS } from '../constants';
+import stEthAbi from '../abis/stEthAbi';
+import wstEthAbi from '../abis/wstEthAbi';
 
-interface TotalRewardsProps {
+interface StEthInfoProps {
   chainName: string;
   account: Address;
-  initialStakedAmount: string; // Amount of ETH initially staked
 }
 
+/**
+ * Fetches the total rewards earned by the user on Lido using sharesOf.
+ */
 export async function getTotalRewardsEarned(
-  { chainName, account, initialStakedAmount }: TotalRewardsProps,
-  { sendTransactions, notify }: FunctionOptions
+  { chainName, account }: StEthInfoProps,
+  { getProvider }: FunctionOptions
 ): Promise<FunctionReturn> {
-  if (!account) return toResult("Wallet not connected", true);
+  if (!account) return toResult('Wallet not connected', true);
 
   const chainId = getChainFromName(chainName);
   if (!chainId || !supportedChains.includes(chainId)) {
-    return toResult(`Unsupported chain: ${chainName}`, true);
+    return toResult(`Lido protocol is not supported on ${chainName}`, true);
   }
 
   try {
-    await notify("Fetching your stETH balance...");
+    const publicClient = getProvider(chainId);
 
-    // Encode the balanceOf call
-    const balanceData = encodeFunctionData({
-      abi: lidoAbi,
-      functionName: "balanceOf",
+    // Fetch stETH balance
+    const stEthBalance = (await publicClient.readContract({
+      address: stETH_ADDRESS,
+      abi: stEthAbi,
+      functionName: 'balanceOf',
       args: [account],
-    });
+    })) as bigint;
 
-    const result = await sendTransactions({
-      chainId,
-      account,
-      transactions: [
-        {
-          target: stETH_ADDRESS as `0x${string}`,
-          data: balanceData,
-        },
-      ],
-    });
+    // Fetch wstETH balance
+    const wstEthBalance = (await publicClient.readContract({
+      address: wstETH_ADDRESS,
+      abi: wstEthAbi,
+      functionName: 'balanceOf',
+      args: [account],
+    })) as bigint;
 
-    // Safely cast to the appropriate type
-    const rawBalanceData = result.data[0] as unknown as `0x${string}`;
-    const balance = decodeFunctionResult({
-      abi: lidoAbi,
-      functionName: "balanceOf",
-      data: rawBalanceData,
-    }) as [bigint];
+    // Convert wstETH to stETH equivalent
+    const convertedStEth = (await publicClient.readContract({
+      address: wstETH_ADDRESS,
+      abi: wstEthAbi,
+      functionName: 'getStETHByWstETH',
+      args: [wstEthBalance],
+    })) as bigint;
 
-    // Convert balance from WEI to ETH
-    const currentBalance = Number(balance[0]) / 10 ** 18; // Convert bigint to number for calculations
-    const initialStaked = parseFloat(initialStakedAmount);
+    // Fetch user's shares
+    const userShares = (await publicClient.readContract({
+      address: stETH_ADDRESS,
+      abi: stEthAbi,
+      functionName: 'sharesOf',
+      args: [account],
+    })) as bigint;
 
-    const totalRewards = currentBalance - initialStaked;
+    // Get total pooled ETH in Lido
+    const totalPooledEther = (await publicClient.readContract({
+      address: stETH_ADDRESS,
+      abi: stEthAbi,
+      functionName: 'getTotalPooledEther',
+    })) as bigint;
 
-    return toResult(`Total Rewards Earned: ${totalRewards.toFixed(4)} ETH`);
+    // Get total shares issued by Lido
+    const totalShares = (await publicClient.readContract({
+      address: stETH_ADDRESS,
+      abi: stEthAbi,
+      functionName: 'getTotalShares',
+    })) as bigint;
+
+    // Calculate initial staked amount using shares formula
+    const initialStakedAmount = (userShares * totalPooledEther) / totalShares;
+
+    // Calculate total rewards earned (stETH + converted wstETH - initial stake)
+    const totalRewards = BigInt(stEthBalance) + BigInt(convertedStEth) - initialStakedAmount;
+
+    return toResult(
+      `Total Rewards Earned: ${formatUnits(totalRewards, 18)} stETH`
+    );
   } catch (error) {
     return toResult(
-      `Failed to fetch total rewards: ${error instanceof Error ? error.message : "Unknown error"}`,
+      `Failed to fetch total rewards: ${
+        error instanceof Error ? error.message : 'Unknown error'
+      }`,
       true
     );
   }

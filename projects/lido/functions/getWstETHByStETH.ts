@@ -1,4 +1,4 @@
-import { Address, encodeFunctionData, parseEther } from 'viem';
+import { formatUnits, Address, parseEther } from 'viem';
 import {
   FunctionReturn,
   FunctionOptions,
@@ -15,13 +15,12 @@ interface StEthInfoProps {
 }
 
 /**
- * Wraps stETH into wstETH (non-rebasing token).
+ * Converts stETH to wstETH value.
  */
-export async function wrapStETH(
-  { chainName, account, amount }: StEthInfoProps,
-  { sendTransactions, notify }: FunctionOptions
+export async function getWstETHByStETH(
+  { chainName, amount }: StEthInfoProps,
+  { getProvider }: FunctionOptions
 ): Promise<FunctionReturn> {
-  if (!account) return toResult('Wallet not connected', true);
   if (!amount) return toResult('Invalid amount.', true);
 
   const chainId = getChainFromName(chainName);
@@ -30,29 +29,21 @@ export async function wrapStETH(
   }
 
   try {
+    const publicClient = getProvider(chainId);
     const amountInWei = parseEther(amount);
-    await notify(`Wrapping ${amount} stETH to wstETH...`);
+    const wstEthAmount = (await publicClient.readContract({
+      address: wstETH_ADDRESS,
+      abi: wstEthAbi,
+      functionName: 'getWstETHByStETH',
+      args: [amountInWei],
+    })) as bigint;
 
-    const tx = {
-      target: wstETH_ADDRESS as `0x${string}`,
-      data: encodeFunctionData({
-        abi: wstEthAbi,
-        functionName: 'wrap',
-        args: [amountInWei],
-      }),
-    };
-
-    const result = await sendTransactions({
-      chainId,
-      account,
-      transactions: [tx],
-    });
     return toResult(
-      `Successfully wrapped ${amount} stETH to wstETH. Transaction: ${result.data}`
+      `Equivalent wstETH: ${formatUnits(wstEthAmount, 18)} wstETH`
     );
   } catch (error) {
     return toResult(
-      `Failed to wrap stETH: ${
+      `Failed to convert stETH to wstETH: ${
         error instanceof Error ? error.message : 'Unknown error'
       }`,
       true

@@ -1,4 +1,4 @@
-import { Address, formatUnits } from 'viem';
+import { formatUnits, Address, parseEther } from 'viem';
 import {
   FunctionReturn,
   FunctionOptions,
@@ -11,16 +11,17 @@ import wstEthAbi from '../abis/wstEthAbi';
 interface StEthInfoProps {
   chainName: string;
   account: Address;
+  amount: string; // Amount to wrap/unwrap
 }
 
 /**
- * Fetches the user's wstETH balance.
+ * Converts wstETH to stETH value.
  */
-export async function getWstETHBalance(
-  { chainName, account }: StEthInfoProps,
+export async function getStETHByWstETH(
+  { chainName, amount }: StEthInfoProps,
   { getProvider }: FunctionOptions
 ): Promise<FunctionReturn> {
-  if (!account) return toResult('Wallet not connected', true);
+  if (!amount) return toResult('Invalid amount.', true);
 
   const chainId = getChainFromName(chainName);
   if (!chainId || !supportedChains.includes(chainId)) {
@@ -29,17 +30,18 @@ export async function getWstETHBalance(
 
   try {
     const publicClient = getProvider(chainId);
-    const balance = (await publicClient.readContract({
+    const amountInWei = parseEther(amount);
+    const stEthAmount = (await publicClient.readContract({
       address: wstETH_ADDRESS,
       abi: wstEthAbi,
-      functionName: 'balanceOf',
-      args: [account],
+      functionName: 'getStETHByWstETH',
+      args: [amountInWei],
     })) as bigint;
 
-    return toResult(`wstETH Balance: ${formatUnits(balance, 18)} wstETH`);
+    return toResult(`Equivalent stETH: ${formatUnits(stEthAmount, 18)} stETH`);
   } catch (error) {
     return toResult(
-      `Failed to fetch wstETH balance: ${
+      `Failed to convert wstETH to stETH: ${
         error instanceof Error ? error.message : 'Unknown error'
       }`,
       true

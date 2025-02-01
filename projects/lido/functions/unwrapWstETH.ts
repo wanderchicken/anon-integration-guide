@@ -1,59 +1,60 @@
-import { Address, encodeFunctionData, parseEther } from "viem";
-import { FunctionReturn, FunctionOptions, toResult, getChainFromName } from "@heyanon/sdk";
-import { supportedChains, wstETH_ADDRESS } from "../constants";
-import wstETHAbi from "../abis/wstETHAbi";
+import { Address, encodeFunctionData, parseEther } from 'viem';
+import {
+  FunctionReturn,
+  FunctionOptions,
+  toResult,
+  getChainFromName,
+} from '@heyanon/sdk';
+import { supportedChains, wstETH_ADDRESS } from '../constants';
+import wstEthAbi from '../abis/wstEthAbi';
 
-interface UnwrapProps {
+interface StEthInfoProps {
   chainName: string;
   account: Address;
-  amount: string;
+  amount: string; // Amount to wrap/unwrap
 }
 
+/**
+ * Unwraps wstETH back into stETH.
+ */
 export async function unwrapWstETH(
-  { chainName, account, amount }: UnwrapProps,
+  { chainName, account, amount }: StEthInfoProps,
   { sendTransactions, notify }: FunctionOptions
 ): Promise<FunctionReturn> {
-  if (!account) return toResult("Wallet not connected", true);
+  if (!account) return toResult('Wallet not connected', true);
+  if (!amount) return toResult('Invalid amount.', true);
 
   const chainId = getChainFromName(chainName);
   if (!chainId || !supportedChains.includes(chainId)) {
-    return toResult(`Unsupported chain: ${chainName}`, true);
-  }
-
-  if (!amount || parseFloat(amount) <= 0) {
-    return toResult("Invalid unwrap amount", true);
+    return toResult(`Lido protocol is not supported on ${chainName}`, true);
   }
 
   try {
     const amountInWei = parseEther(amount);
+    await notify(`Unwrapping ${amount} wstETH to stETH...`);
 
-    await notify(`Preparing to unwrap ${amount} wstETH...`);
+    const tx = {
+      target: wstETH_ADDRESS as `0x${string}`,
+      data: encodeFunctionData({
+        abi: wstEthAbi,
+        functionName: 'unwrap',
+        args: [amountInWei],
+      }),
+    };
 
-    // Encode the unwrap transaction
-    const unwrapData = encodeFunctionData({
-      abi: wstETHAbi,
-      functionName: "unwrap",
-      args: [amountInWei],
-    });
-
-    // Send the transaction
     const result = await sendTransactions({
       chainId,
       account,
-      transactions: [
-        {
-          target: wstETH_ADDRESS as `0x${string}`,
-          data: unwrapData,
-        },
-      ],
+      transactions: [tx],
     });
-
-    await notify(`Successfully unwrapped ${amount} wstETH into stETH.`);
-
-    return toResult(`Successfully unwrapped ${amount} wstETH into stETH.`);
+    return toResult(
+      `Successfully unwrapped ${amount} wstETH to stETH. Transaction: ${result.data}`
+    );
   } catch (error) {
     return toResult(
-      `Failed to unwrap wstETH: ${error instanceof Error ? error.message : "Unknown error"}`,
+      `Failed to unwrap wstETH: ${
+        error instanceof Error ? error.message : 'Unknown error'
+      }`,
       true
     );
   }
