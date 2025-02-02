@@ -1,4 +1,4 @@
-const wstEthAbi = [
+const wstETHAbi = [
   {
     inputs: [{ internalType: "uint256", name: "_stETHAmount", type: "uint256" }],
     name: "wrap",
@@ -43,4 +43,4 @@ const wstEthAbi = [
   },
 ];
 
-export default wstEthAbi;
+export default wstETHAbi;

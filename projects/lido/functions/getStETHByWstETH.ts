@@ -6,7 +6,7 @@ import {
   getChainFromName,
 } from '@heyanon/sdk';
 import { supportedChains, wstETH_ADDRESS } from '../constants';
-import wstEthAbi from '../abis/wstEthAbi';
+import wstETHAbi from '../abis/wstETHAbi';
 
 interface StEthInfoProps {
   chainName: string;
@@ -33,7 +33,7 @@ export async function getStETHByWstETH(
     const amountInWei = parseEther(amount);
     const stEthAmount = (await publicClient.readContract({
       address: wstETH_ADDRESS,
-      abi: wstEthAbi,
+      abi: wstETHAbi,
       functionName: 'getStETHByWstETH',
       args: [amountInWei],
     })) as bigint;

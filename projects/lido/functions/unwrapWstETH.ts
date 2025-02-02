@@ -6,7 +6,7 @@ import {
   getChainFromName,
 } from '@heyanon/sdk';
 import { supportedChains, wstETH_ADDRESS } from '../constants';
-import wstEthAbi from '../abis/wstEthAbi';
+import wstETHAbi from '../abis/wstETHAbi';
 
 interface StEthInfoProps {
   chainName: string;
@@ -36,7 +36,7 @@ export async function unwrapWstETH(
     const tx = {
       target: wstETH_ADDRESS as `0x${string}`,
       data: encodeFunctionData({
-        abi: wstEthAbi,
+        abi: wstETHAbi,
         functionName: 'unwrap',
         args: [amountInWei],
       }),
