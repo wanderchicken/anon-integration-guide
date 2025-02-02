@@ -1,4 +1,4 @@
-const wstEthAbi = [
+const wstETHAbi = [
   {
     inputs: [{ internalType: "uint256", name: "_stETHAmount", type: "uint256" }],
     name: "wrap",
@@ -34,6 +34,13 @@ const wstEthAbi = [
     stateMutability: "view",
     type: "function",
   },
+  {
+    inputs: [{ internalType: "address", name: "account", type: "address" }],
+    name: "balanceOf",
+    outputs: [{ internalType: "uint256", name: "balance", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
 ];
 
-export default wstEthAbi;
+export default wstETHAbi;
