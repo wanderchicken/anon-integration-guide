@@ -3,7 +3,7 @@ import {
   toResult,
   getChainFromName,
 } from '@heyanon/sdk';
-import { supportedChains } from '../constants';
+import { fetchLidoAPRApiUrl, supportedChains } from '../constants';
 
 
 /**
@@ -18,7 +18,7 @@ export async function getLidoAPR(
   }
 
   try {
-    const response = await fetch('https://eth-api.lido.fi/v1/protocol/steth/apr/last');
+    const response = await fetch(fetchLidoAPRApiUrl);
     if (!response.ok) {
       return toResult(`Failed to fetch Lido APR: ${response.statusText}`, true);
     }

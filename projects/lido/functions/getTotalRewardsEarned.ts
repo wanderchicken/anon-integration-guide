@@ -4,7 +4,7 @@ import {
   toResult,
   getChainFromName,
 } from '@heyanon/sdk';
-import { supportedChains } from '../constants';
+import { fetchTotalRewardsApiEndpoint, supportedChains } from '../constants';
 
 interface StEthInfoProps {
   chainName: string;
@@ -26,7 +26,7 @@ export async function getTotalRewardsEarned(
 
   try {
 
-    const response = await fetch(`https://reward-history-backend.lido.fi/?address=${account}&onlyRewards=true`);
+    const response = await fetch(`${fetchTotalRewardsApiEndpoint}/?address=${account}&onlyRewards=true`);
     if (!response.ok) {
       return toResult(`Failed to fetch total Rewards: ${response.statusText}`, true);
     }
