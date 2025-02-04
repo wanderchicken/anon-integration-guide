@@ -10,9 +10,9 @@ import { supportedChains, stETH_ADDRESS } from '../constants';
 import stEthAbi from '../abis/stEthAbi';
 
 interface Props {
-  chainName: string; // Name of the blockchain network (e.g., "Ethereum")
+  chainName: string; // Blockchain network name
   account: Address; // User's wallet address
-  amount: string; // Amount of ETH to stake (as a string, e.g., "1.5")
+  amount: string; // ETH amount to stake
 }
 
 /**
@@ -25,7 +25,6 @@ export async function stakeETH(
   { chainName, account, amount }: Props,
   { sendTransactions, notify }: FunctionOptions
 ): Promise<FunctionReturn> {
-  // Check if the wallet is connected
   if (!account) {
     return toResult('Wallet not connected', true);
   }
@@ -47,44 +46,37 @@ export async function stakeETH(
   }
 
   try {
-    // Convert the stake amount from ETH to wei (smallest unit of ETH)
     const amountInWei = parseEther(amount);
+    const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"; // Referral address
 
-    // Notify the user that the staking process is starting
     await notify(`Preparing to stake ${amount} ETH...`);
 
-    // Prepare the stake transaction
     const tx: TransactionParams = {
-      target: stETH_ADDRESS, // Address of the Lido stETH contract
+      target: stETH_ADDRESS, // Lido contract address
       data: encodeFunctionData({
-        abi: stEthAbi, // ABI of the Lido stETH contract
-        functionName: 'submit', // Function to call (stake ETH)
-        args: [account], // Arguments for the function (recipient address)
+        abi: stEthAbi,
+        functionName: 'submit',
+        args: [ZERO_ADDRESS], // ✅ Passing referral address (required)
       }),
-      value: amountInWei, // Amount of ETH to send (in wei)
+      value: amountInWei, // ✅ ETH is passed correctly
     };
 
-    // Notify the user that the transaction is being processed
     await notify('Waiting for transaction confirmation...');
 
-    // Send the transaction to the blockchain
     const result = await sendTransactions({
       chainId, // Chain ID of the network
       account, // User's wallet address
       transactions: [tx], // List of transactions to send
     });
 
-    // Extract the result message from the transaction response
     const stakeMessage = result.data[result.data.length - 1];
 
-    // Return a success message
     return toResult(
       result.isMultisig
-        ? stakeMessage.message // If multisig, return the multisig message
-        : `Successfully staked ${amount} ETH. ${stakeMessage.message}` // Otherwise, return a success message
+        ? stakeMessage.message
+        : `Successfully staked ${amount} ETH. ${stakeMessage.message}`
     );
   } catch (error) {
-    // Handle any errors that occur during the staking process
     return toResult(
       `Failed to stake ETH: ${
         error instanceof Error ? error.message : 'Unknown error'
@@ -93,3 +85,6 @@ export async function stakeETH(
     );
   }
 }
+
+ 
+

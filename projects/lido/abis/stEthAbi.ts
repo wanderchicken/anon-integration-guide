@@ -19,9 +19,9 @@ const stEthAbi = [
   },
   {
     "constant": false,
-    "inputs": [{ "name": "_amount", "type": "uint256" }],
+    "inputs": [{"name": "_referral", "type": "address"}],
     "name": "submit",
-    "outputs": [{ "name": "", "type": "uint256" }],
+    "outputs": [{"name": "", "type": "uint256"}],
     "payable": true,
     "stateMutability": "payable",
     "type": "function"
