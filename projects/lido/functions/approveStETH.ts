@@ -38,7 +38,7 @@ export async function approveStETH(
       };
   
       const result = await sendTransactions({ chainId, account, transactions: [tx] });
-      return toResult(`Successfully approved ${amount} stETH for wrapping. Transaction: ${result.data}`);
+      return toResult(`Successfully approved ${amount} stETH for wrapping. Transaction Hash: ${result?.data?.[0]?.hash || "Unknown"}`);
     } catch (error) {
       return toResult(`Failed to approve stETH: ${error instanceof Error ? error.message : "Unknown error"}`, true);
     }
