@@ -48,7 +48,7 @@ export async function wrapStETH(
       transactions: [tx],
     });
     return toResult(
-      `Successfully wrapped ${amount} stETH to wstETH. Transaction: ${result.data}`
+      `Successfully wrapped ${amount} stETH to wstETH. Transaction Hash: ${result?.data?.[0]?.hash || "Unknown"}`
     );
   } catch (error) {
     return toResult(

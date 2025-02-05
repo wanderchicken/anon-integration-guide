@@ -48,7 +48,7 @@ export async function unwrapWstETH(
       transactions: [tx],
     });
     return toResult(
-      `Successfully unwrapped ${amount} wstETH to stETH. Transaction: ${result.data}`
+      `Successfully unwrapped ${amount} wstETH to stETH. Transaction Hash: ${result?.data?.[0]?.hash || "Unknown"}`
     );
   } catch (error) {
     return toResult(
