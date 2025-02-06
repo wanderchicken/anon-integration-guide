@@ -5,19 +5,20 @@ import {
   toResult,
   getChainFromName,
 } from '@heyanon/sdk';
-import { stETH_ADDRESS, wstETH_ADDRESS, supportedChains } from '../constants';
+import { stETH_ADDRESS, wstETH_ADDRESS, supportedChains, LIDO_WITHDRAWAL_ADDRESS } from '../constants';
 import stEthAbi from '../abis/stEthAbi';
 
 interface StEthInfoProps {
   chainName: string;
   account: Address;
+  operation: "wrap" | "withdraw"; // Determines allowance type
 }
 
 /**
  * Checks the allowance for stETH wrapping.
  */
 export async function checkAllowance(
-  { chainName, account }: StEthInfoProps,
+  { chainName, account,operation }: StEthInfoProps,
   { getProvider }: FunctionOptions
 ): Promise<FunctionReturn> {
   if (!account) return toResult('Wallet not connected', true);
@@ -28,12 +29,13 @@ export async function checkAllowance(
   }
 
   try {
+    const spenderAddress = operation === "wrap" ? wstETH_ADDRESS : LIDO_WITHDRAWAL_ADDRESS; // ✅ Wrapping or Withdrawal Approval
     const publicClient = getProvider(chainId);
     const allowance = (await publicClient.readContract({
       address: stETH_ADDRESS,
       abi: stEthAbi,
       functionName: 'allowance',
-      args: [account, wstETH_ADDRESS],
+      args: [account, spenderAddress],
     })) as bigint;
 
     return toResult(`Allowance: ${formatUnits(allowance, 18)} stETH`);
