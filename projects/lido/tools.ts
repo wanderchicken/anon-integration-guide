@@ -204,60 +204,6 @@ export const tools: AiTool[] = [
     ],
   },
   {
-    name: 'approveStETH',
-    description: 'Approve stETH for either wrapping or withdrawal',
-    required: ['chainName', 'account', 'amount', 'operation'],
-    props: [
-      {
-        name: 'chainName',
-        type: 'string',
-        enum: supportedChains,
-        description: 'The blockchain network to perform the approval',
-      },
-      {
-        name: 'account',
-        type: 'string',
-        description: 'The account address approving the transaction',
-      },
-      {
-        name: 'amount',
-        type: 'string',
-        description: 'The amount of stETH to approve',
-      },
-      {
-        name: 'operation',
-        type: 'string',
-        enum: ['wrap', 'withdraw'],
-        description: 'The type of approval: "wrap" for wrapping stETH, "withdraw" for requesting withdrawal',
-      },
-    ],
-  },
-  {
-    
-    name: 'checkAllowance',
-    description: 'Check stETH allowance for wrapping or withdrawal',
-    required: ['chainName', 'account', 'operation'],
-    props: [
-      {
-        name: 'chainName',
-        type: 'string',
-        enum: supportedChains,
-        description: 'The blockchain network to query',
-      },
-      {
-        name: 'account',
-        type: 'string',
-        description: 'The account address to check the allowance for',
-      },
-      {
-        name: 'operation',
-        type: 'string',
-        enum: ['wrap', 'withdraw'],
-        description: 'The type of allowance to check: "wrap" for wrapping stETH, "withdraw" for withdrawal',
-      },
-    ],
-  },
-  {
     name: 'getTotalRewardsEarned',
     description: 'Calculate the total rewards earned for stETH staking',
     required: ['chainName', 'account'],
