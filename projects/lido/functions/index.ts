@@ -8,7 +8,5 @@ export { claimWithdrawStETH } from './claimWithdrawStETH';
 export { getWstETHByStETH } from './getWstETHByStETH';
 export { getStETHByWstETH } from './getStETHByWstETH';
 export { getTotalStaked } from './getTotalStaked';
-export { approveStETH } from './approveStETH';
-export { checkAllowance } from './checkAllowance';
 export { getTotalRewardsEarned } from './getTotalRewardsEarned';
 export { getLidoAPR } from './getLidoAPR';

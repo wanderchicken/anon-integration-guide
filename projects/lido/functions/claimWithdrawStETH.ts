@@ -26,6 +26,10 @@ export async function claimWithdrawStETH(
 ): Promise<FunctionReturn> {
   if (!account) return toResult('Wallet not connected', true);
 
+  if (!Array.isArray(requestIds) || requestIds.length === 0) {
+    return toResult('Invalid request: No valid withdrawal request IDs provided.', true);
+  }
+
   // Get the chain ID from the chain name
   const chainId = getChainFromName(chainName);
   if (!chainId || !supportedChains.includes(chainId)) {

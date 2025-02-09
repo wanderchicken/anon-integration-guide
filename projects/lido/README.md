@@ -59,8 +59,6 @@ Lido is a decentralized liquid staking protocol for Ethereum that allows users t
 | `getWstETHByStETH`      | Calculate the amount of wstETH for a given stETH amount |
 | `getStETHByWstETH`      | Calculate the amount of stETH for a given wstETH amount |
 | `getTotalStaked`        | Retrieve the total staked ETH in Lido                   |
-| `approveStETH`          | Approve a spender to transfer stETH                     |
-| `checkAllowance`        | Retrieve the allowance of stETH for a specific spender  |
 | `getTotalRewardsEarned` | Calculate total rewards earned from stETH staking       |
 | `getLidoAPR`            | Fetches the latest Lido APR from the official Lido API  |
 

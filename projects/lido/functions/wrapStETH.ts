@@ -1,30 +1,31 @@
 /**
- * Function: wrapStETH
- *
- * This function wraps stETH into wstETH (a non-rebasing token) while ensuring that the user has enough allowance.
- *
- * ✅ Flow of Execution:
- * 1. Validate user input (wallet connection and valid amount).
- * 2. Fetch the chain ID and verify if it supports Lido's wrapping mechanism.
- * 3. Check the user's stETH allowance for the wrapping contract.
- *    - If the allowance is insufficient, approve the required amount.
- *    - Poll allowance updates (up to 30 seconds) to confirm approval.
- * 4. Once allowance is confirmed, send the transaction to wrap stETH into wstETH.
- * 5. Return success or failure message based on execution result.
+ * **Function: wrapStETH**
+ * 
+ * This function wraps **stETH** into **wstETH** (a non-rebasing token) while ensuring that the user has enough allowance.
+ * It follows a **secure and efficient process** to prevent errors such as `ALLOWANCE_EXCEEDED`.
+ * 
+ * ✅ **Flow of Execution:**
+ * 1️⃣ **Validate Inputs** → Ensure the user’s wallet is connected and the amount is valid.
+ * 2️⃣ **Fetch the Chain ID** → Check if the selected chain supports Lido's wrapping mechanism.
+ * 3️⃣ **Check & Approve Allowance** → Use `checkToApprove` to verify if the user has granted enough allowance.
+ *     - If allowance is insufficient, request approval.
+ *     - Wait for allowance confirmation before proceeding.
+ * 4️⃣ **Send the Wrap Transaction** → Convert the specified amount of **stETH** into **wstETH**.
+ * 5️⃣ **Return Success or Failure** → Notify the user about the transaction result.
  */
 
-
-import { Address, encodeFunctionData, parseEther, formatUnits } from 'viem';
+import { Address, encodeFunctionData, parseEther } from 'viem';
 import {
   FunctionReturn,
   FunctionOptions,
   toResult,
   getChainFromName,
+  checkToApprove,
+  TransactionParams
 } from '@heyanon/sdk';
-import { supportedChains, wstETH_ADDRESS } from '../constants';
+import { supportedChains, wstETH_ADDRESS, stETH_ADDRESS } from '../constants';
 import wstETHAbi from '../abis/wstETHAbi';
-import { checkAllowance } from './checkAllowance';
-import { approveStETH } from './approveStETH';
+import stEthAbi from '../abis/stEthAbi';
 
 interface StEthInfoProps {
   chainName: string;
@@ -34,11 +35,12 @@ interface StEthInfoProps {
 
 export async function wrapStETH(
   { chainName, account, amount }: StEthInfoProps,
-  { sendTransactions, getProvider, notify }: FunctionOptions // Removed waitForTransaction
+  { sendTransactions,getProvider, notify }: FunctionOptions
 ): Promise<FunctionReturn> {
   if (!account) return toResult('Wallet not connected', true);
   if (!amount || parseFloat(amount) <= 0) return toResult('Invalid amount.', true);
 
+  // ✅ Get Chain ID Dynamically
   const chainId = getChainFromName(chainName);
   if (!chainId || !supportedChains.includes(chainId)) {
     return toResult(`Lido protocol is not supported on ${chainName}`, true);
@@ -48,74 +50,87 @@ export async function wrapStETH(
     const amountInWei = parseEther(amount);
     await notify(`Checking stETH allowance for wrapping...`);
 
-    // ✅ Step 1: Check Initial Allowance
-    let allowanceResponse = await checkAllowance({ chainName, account, operation: "wrap" }, { sendTransactions, getProvider, notify });
-    if (!allowanceResponse.success) return allowanceResponse;
+    const provider = getProvider(chainId);
+    let transactions: TransactionParams[] = [];
 
-    let allowance = parseEther(allowanceResponse.data.split(' ')[1]); // Convert allowance amount to BigInt
+    // ✅ Step 1: Use `checkToApprove` to Ensure Correct Allowance
+    await checkToApprove({
+      args: {
+        account,
+        target: stETH_ADDRESS, // Token being approved (stETH)
+        spender: wstETH_ADDRESS, // Wrapping contract address
+        amount: amountInWei, // Required allowance
+      },
+      provider,
+      transactions,
+    });
 
-    if (allowance < amountInWei) {
-      const remainingToApprove = amountInWei - allowance;
-      await notify(`Insufficient allowance: ${formatUnits(allowance, 18)} stETH. Approving additional ${formatUnits(remainingToApprove, 18)} stETH...`);
+    // ✅ Step 2: If Approval Needed, Send Approval Transaction First
+    if (transactions.length > 0) {
+      await notify(`Approving stETH allowance for wrapping...`);
+      const approvalResult = await sendTransactions({ chainId, account, transactions });
 
-      // ✅ Step 2: Approve the Remaining Amount
-      const approvalResponse = await approveStETH(
-        { chainName, account, amount: formatUnits(remainingToApprove, 18), operation: "wrap" },
-        { sendTransactions, notify, getProvider }
-      );
+      if (!approvalResult || !approvalResult.data || approvalResult.data.length === 0) {
+        return toResult(`Approval failed. No transaction response received.`, true);
+      }
 
-      if (!approvalResponse.success) return approvalResponse;
+      await notify(`Approval transaction confirmed. Verifying allowance update...`);
 
-      await notify(`Approval transaction sent. Waiting for allowance update...`);
-
-      // ✅ Step 3: Poll Allowance Until It Updates (Max 30 seconds)
+      // ✅ Step 3: Wait for Allowance Update Before Wrapping
       let retries = 0;
-      const maxRetries = 6; // Retry every 5 seconds for 30 seconds
+      const maxRetries = 10;
+      let allowanceUpdated = false;
 
       while (retries < maxRetries) {
-        await new Promise((resolve) => setTimeout(resolve, 5000)); // Wait 5 seconds before checking again
+        await new Promise((resolve) => setTimeout(resolve, 5000)); // ✅ Wait 5 seconds
 
-        allowanceResponse = await checkAllowance({ chainName, account, operation: "wrap" }, { sendTransactions, getProvider, notify });
-        if (!allowanceResponse.success) return allowanceResponse;
-        
-        allowance = parseEther(allowanceResponse.data.split(' ')[1]); // Convert allowance amount
+        const updatedAllowance = await provider.readContract({
+          address: stETH_ADDRESS,
+          abi: stEthAbi,
+          functionName: "allowance",
+          args: [account, wstETH_ADDRESS],
+        }) as bigint
 
-        if (allowance >= amountInWei) {
-          await notify(`Approval confirmed! New allowance: ${formatUnits(allowance, 18)} stETH.`);
+        if (updatedAllowance >= amountInWei) {
+          allowanceUpdated = true;
           break;
         }
 
         retries++;
       }
 
-      if (allowance < amountInWei) {
-        return toResult(`Approval did not process in time. Please try again later.`, true);
+      if (!allowanceUpdated) {
+        return toResult(`Allowance update did not finalize. Please try again later.`, true);
       }
     }
 
-    // ✅ Step 4: Wrap stETH → wstETH
-    await notify(`Wrapping ${amount} stETH to wstETH...`);
-    const tx = {
+    // ✅ Step 4: Prepare Wrap Transaction
+    const wrapTx: TransactionParams = {
       target: wstETH_ADDRESS as `0x${string}`,
       data: encodeFunctionData({
         abi: wstETHAbi,
-        functionName: 'wrap',
+        functionName: "wrap",
         args: [amountInWei],
       }),
     };
 
+    await notify(`Sending transaction to wrap ${amount} stETH into wstETH...`);
     const result = await sendTransactions({
       chainId,
       account,
-      transactions: [tx],
+      transactions: [wrapTx],
     });
+
+    if (!result || !result.data || result.data.length === 0) {
+      return toResult(`Wrapping transaction failed. No transaction response received.`, true);
+    }
 
     return toResult(
       `Successfully wrapped ${amount} stETH to wstETH. Transaction Hash: ${result?.data?.[0]?.hash || "Unknown"}`
     );
   } catch (error) {
     return toResult(
-      `Failed to wrap stETH: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      `Failed to wrap stETH: ${error instanceof Error ? error.message : "Unknown error"}`,
       true
     );
   }
