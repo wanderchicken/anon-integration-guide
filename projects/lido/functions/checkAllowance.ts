@@ -29,14 +29,19 @@ export async function checkAllowance(
   }
 
   try {
-    const spenderAddress = operation === "wrap" ? wstETH_ADDRESS : LIDO_WITHDRAWAL_ADDRESS; // ✅ Wrapping or Withdrawal Approval
+    const spenderAddress = operation === "wrap" ? wstETH_ADDRESS : LIDO_WITHDRAWAL_ADDRESS; // ✅ Determine correct spender
+
     const publicClient = getProvider(chainId);
-    const allowance = (await publicClient.readContract({
+    if (!publicClient) {
+      return toResult(`Failed to get provider for chain: ${chainName}`, true);
+    }
+
+    const allowance = await publicClient.readContract({
       address: stETH_ADDRESS,
       abi: stEthAbi,
       functionName: 'allowance',
       args: [account, spenderAddress],
-    })) as bigint;
+    }) as bigint
 
     return toResult(`Allowance: ${formatUnits(allowance, 18)} stETH`);
   } catch (error) {
