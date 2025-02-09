@@ -1,3 +1,19 @@
+/**
+ * Function: wrapStETH
+ *
+ * This function wraps stETH into wstETH (a non-rebasing token) while ensuring that the user has enough allowance.
+ *
+ * ✅ Flow of Execution:
+ * 1. Validate user input (wallet connection and valid amount).
+ * 2. Fetch the chain ID and verify if it supports Lido's wrapping mechanism.
+ * 3. Check the user's stETH allowance for the wrapping contract.
+ *    - If the allowance is insufficient, approve the required amount.
+ *    - Poll allowance updates (up to 30 seconds) to confirm approval.
+ * 4. Once allowance is confirmed, send the transaction to wrap stETH into wstETH.
+ * 5. Return success or failure message based on execution result.
+ */
+
+
 import { Address, encodeFunctionData, parseEther, formatUnits } from 'viem';
 import {
   FunctionReturn,
@@ -16,9 +32,6 @@ interface StEthInfoProps {
   amount: string; // Amount to wrap
 }
 
-/**
- * Wraps stETH into wstETH (non-rebasing token) after ensuring sufficient allowance.
- */
 export async function wrapStETH(
   { chainName, account, amount }: StEthInfoProps,
   { sendTransactions, getProvider, notify }: FunctionOptions // Removed waitForTransaction

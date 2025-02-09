@@ -1,3 +1,19 @@
+/**
+ * Function: wrapStETH / requestWithdrawStETH
+ *
+ * This function requests a withdrawal of stETH from the Lido protocol while ensuring sufficient allowance.
+ *
+ * ✅ Flow of Execution:
+ * 1. Validate user input (wallet connection and valid amount).
+ * 2. Fetch the chain ID and verify if it supports Lido's withdrawal mechanism.
+ * 3. Check the user's stETH allowance for the withdrawal contract.
+ *    - If the allowance is insufficient, approve the required amount.
+ *    - Poll allowance updates (up to 30 seconds) to confirm approval.
+ * 4. Once allowance is confirmed, send the transaction to request withdrawal.
+ * 5. Return success or failure message based on execution result.
+ */
+
+
 import { Address, encodeFunctionData, parseEther, formatUnits } from 'viem';
 import {
   FunctionReturn,
@@ -16,9 +32,6 @@ interface WithdrawProps {
   amount: string; // Amount of stETH to withdraw
 }
 
-/**
- * Requests a withdrawal of stETH from the Lido protocol after ensuring allowance.
- */
 export async function requestWithdrawStETH(
   { chainName, account, amount }: WithdrawProps,
   { sendTransactions, getProvider, notify }: FunctionOptions
