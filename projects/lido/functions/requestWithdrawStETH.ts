@@ -1,143 +1,82 @@
-/**
- * **Function: requestWithdrawStETH**
- *
- * This function requests a withdrawal of **stETH** from the **Lido protocol** while ensuring the user has sufficient allowance.
- *
- * ✅ **Flow of Execution:**
- * 1️⃣ **Validate Inputs** → Ensure the user’s wallet is connected and the amount is valid.
- * 2️⃣ **Fetch the Chain ID** → Verify if the selected chain supports Lido’s withdrawal mechanism.
- * 3️⃣ **Check & Approve Allowance** → Use `checkToApprove` to verify and update the user’s stETH allowance.
- *     - If allowance is insufficient, request approval.
- *     - Wait for allowance confirmation before proceeding.
- * 4️⃣ **Send the Withdrawal Request** → Convert the specified amount of **stETH** into **a withdrawal request**.
- * 5️⃣ **Return Success or Failure** → Notify the user about the transaction result.
- */
-
-import { Address, encodeFunctionData, parseEther } from 'viem';
+import { Address, encodeFunctionData, parseUnits } from "viem";
 import {
   FunctionReturn,
   FunctionOptions,
+  TransactionParams,
   toResult,
   getChainFromName,
-  checkToApprove,
-  TransactionParams
-} from '@heyanon/sdk';
-import { supportedChains, LIDO_WITHDRAWAL_ADDRESS, stETH_ADDRESS } from '../constants';
-import withdrawalAbi from '../abis/withdrawalAbi';
-import stEthAbi from '../abis/stEthAbi';
+  checkToApprove
+} from "@heyanon/sdk";
+import { supportedChains, LIDO_WITHDRAWAL_ADDRESS, stETH_ADDRESS } from "../constants";
+import  withdrawalAbi  from "../abis/withdrawalAbi";
 
 interface WithdrawProps {
-  chainName: string; // Blockchain network name
-  account: Address; // User's wallet address
-  amount: string; // Amount of stETH to withdraw
+  chainName: string;
+  account: Address;
+  amount: string;
 }
 
 /**
- * **Requests a withdrawal of stETH from the Lido protocol after ensuring allowance.**
+ * Requests a withdrawal of stETH from the Lido protocol.
+ * @param props - Withdrawal parameters.
+ * @param tools - System tools for blockchain interactions.
+ * @returns Transaction result.
  */
 export async function requestWithdrawStETH(
   { chainName, account, amount }: WithdrawProps,
-  { sendTransactions,getProvider, notify }: FunctionOptions
+  { sendTransactions, notify, getProvider }: FunctionOptions
 ): Promise<FunctionReturn> {
-  // ✅ Step 1: Validate User Inputs
-  if (!account) return toResult('Wallet not connected', true);
-  if (!amount || parseFloat(amount) <= 0) return toResult('Invalid withdrawal amount.', true);
+  // Check wallet connection
+  if (!account) return toResult("Wallet not connected", true);
 
-  // ✅ Step 2: Fetch Chain ID Dynamically
+  // Validate chain
   const chainId = getChainFromName(chainName);
-  if (!chainId || !supportedChains.includes(chainId)) {
+  if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
+  if (!supportedChains.includes(chainId))
     return toResult(`Lido protocol is not supported on ${chainName}`, true);
-  }
 
-  try {
-    const amountInWei = parseEther(amount);
-    await notify(`Checking stETH allowance for withdrawal...`);
+  // Validate amount
+  const amountInWei = parseUnits(amount, 18);
+  if (amountInWei === 0n)
+    return toResult("Amount must be greater than 0", true);
 
-    const provider = getProvider(chainId);
-    let transactions: TransactionParams[] = [];
+  await notify("Checking stETH allowance for withdrawal...");
 
-    // ✅ Step 3: Use `checkToApprove` to Ensure Correct Allowance
-    await checkToApprove({
-      args: {
-        account,
-        target: stETH_ADDRESS, // Token being approved (stETH)
-        spender: LIDO_WITHDRAWAL_ADDRESS, // Lido Withdrawal contract
-        amount: amountInWei, // Required allowance
-      },
-      provider,
-      transactions,
-    });
+  const provider = getProvider(chainId);
+  const transactions: TransactionParams[] = [];
 
-    // ✅ Step 4: If Approval is Required, Send the Approval Transaction
-    if (transactions.length > 0) {
-      await notify(`Approving stETH allowance for withdrawal...`);
-      const approvalResult = await sendTransactions({ chainId, account, transactions });
-
-      if (!approvalResult || !approvalResult.data || approvalResult.data.length === 0) {
-        return toResult(`Approval failed. No transaction response received.`, true);
-      }
-
-      await notify(`Approval transaction confirmed. Verifying allowance update...`);
-
-      // ✅ Step 5: Wait for Allowance Update Before Proceeding
-      let retries = 0;
-      const maxRetries = 10;
-      let allowanceUpdated = false;
-
-      while (retries < maxRetries) {
-        await new Promise((resolve) => setTimeout(resolve, 5000)); // ✅ Wait 5 seconds
-
-        const updatedAllowance = await provider.readContract({
-          address: stETH_ADDRESS,
-          abi: stEthAbi,
-          functionName: "allowance",
-          args: [account, LIDO_WITHDRAWAL_ADDRESS],
-        }) as bigint;
-
-        if (updatedAllowance >= amountInWei) {
-          allowanceUpdated = true;
-          break;
-        }
-
-        retries++;
-      }
-
-      if (!allowanceUpdated) {
-        return toResult(`Allowance update did not finalize. Please try again later.`, true);
-      }
-    }
-
-    // ✅ Step 6: Prepare Withdrawal Transaction
-    await notify(`Requesting withdrawal of ${amount} stETH...`);
-
-    const withdrawTx: TransactionParams = {
-      target: LIDO_WITHDRAWAL_ADDRESS as `0x${string}`,
-      data: encodeFunctionData({
-        abi: withdrawalAbi, // ✅ Lido Withdrawal ABI
-        functionName: "requestWithdrawals",
-        args: [[amountInWei], account], // Withdrawal amount and recipient address
-      }),
-    };
-
-    // ✅ Step 7: Send Withdrawal Transaction
-    const result = await sendTransactions({
-      chainId,
+  // Check and prepare approve transaction if needed
+  await checkToApprove({
+    args: {
       account,
-      transactions: [withdrawTx],
-    });
+      target: stETH_ADDRESS,
+      spender: LIDO_WITHDRAWAL_ADDRESS,
+      amount: amountInWei,
+    },
+    provider,
+    transactions,
+  });
 
-    if (!result || !result.data || result.data.length === 0) {
-      return toResult(`Withdrawal transaction failed. No transaction response received.`, true);
-    }
+  // Prepare withdrawal transaction
+  const withdrawTx: TransactionParams = {
+    target: LIDO_WITHDRAWAL_ADDRESS,
+    data: encodeFunctionData({
+      abi: withdrawalAbi,
+      functionName: "requestWithdrawals",
+      args: [[amountInWei], account],
+    }),
+  };
+  transactions.push(withdrawTx);
 
-    return toResult(
-      `Withdrawal request of ${amount} stETH submitted. Transaction Hash: ${result?.data?.[0]?.hash || "Unknown"}`
-    );
-  } catch (error) {
-    return toResult(
-      `Failed to request withdrawal: ${error instanceof Error ? error.message : "Unknown error"}`,
-      true
-    );
-  }
+  await notify("Sending transaction to request stETH withdrawal...");
+
+  // Sign and send transaction
+  const result = await sendTransactions({ chainId, account, transactions });
+  const withdrawMessage = result.data[result.data.length - 1];
+
+  return toResult(
+    result.isMultisig
+      ? withdrawMessage.message
+      : `Withdrawal request of ${amount} stETH submitted. ${withdrawMessage.message}`
+  );
 }
-
