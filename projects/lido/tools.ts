@@ -149,7 +149,7 @@ export const tools: AiTool[] = [
       },
       {
         name: 'requestIds',
-        type: 'string',
+        type: 'number[]',
         description: 'The IDs of the withdrawal to claim',
       },
     ],

@@ -15,20 +15,25 @@ interface ClaimWithdrawalProps {
 }
 
 /**
- * Claims ETH from completed withdrawal requests in the Lido protocol.
- * @param {ClaimWithdrawalProps} params - Contains the chain name, account address, and withdrawal request IDs.
- * @param {FunctionOptions} options - Provides the `sendTransactions` and `notify` utilities.
- * @returns {Promise<FunctionReturn>} - A promise resolving to a success message or an error message.
+ * Claims a batch of withdrawal requests if they are finalized, sending locked ether to the owner
+ * @param {ClaimWithdrawalProps} params - Contains the chain name, account address, withdrawal request IDs, and hints
+ * @param {FunctionOptions} options - Provides the `sendTransactions` and `notify` utilities
+ * @returns {Promise<FunctionReturn>} - A promise resolving to a success message or an error message
  */
 export async function claimWithdrawStETH(
   { chainName, account, requestIds }: ClaimWithdrawalProps,
   { sendTransactions, notify, getProvider }: FunctionOptions
 ): Promise<FunctionReturn> {
+  // Input validation
   if (!account) return toResult('Wallet not connected', true);
 
   if (!Array.isArray(requestIds) || requestIds.length === 0) {
     return toResult('Invalid request: No valid withdrawal request IDs provided.', true);
   }
+
+
+  const hints = requestIds.map(()=>BigInt(0))
+  const requestIdsBigInt = requestIds.map(id => BigInt(id));
 
   // Get the chain ID from the chain name
   const chainId = getChainFromName(chainName);
@@ -38,14 +43,33 @@ export async function claimWithdrawStETH(
 
   try {
     const publicClient = getProvider(chainId);
-    const hints = new Array(requestIds.length).fill(0); // Assuming hints array can be filled with 0s
+
+    // Check withdrawal status for all requests
+    const withdrawalStatus = await publicClient.readContract({
+      address: LIDO_WITHDRAWAL_ADDRESS,
+      abi: withdrawalAbi,
+      functionName: 'getWithdrawalStatus',
+      args: [requestIdsBigInt],
+    });
+
+    if (!Array.isArray(withdrawalStatus)) {
+      return toResult(
+        'Invalid response from contract: expected array of withdrawal statuses.',
+        true
+      );
+    }
+
+    // Check if any requests are not finalized
+    if (!withdrawalStatus.every(status => status)) {
+      return toResult('Some withdrawal requests are not finalized yet.', true);
+    }
 
     // Get claimable ETH amount
     const claimableEthValues = await publicClient.readContract({
       address: LIDO_WITHDRAWAL_ADDRESS,
       abi: withdrawalAbi,
       functionName: 'getClaimableEther',
-      args: [requestIds, hints],
+      args: [requestIdsBigInt, hints],
     });
 
     if (!Array.isArray(claimableEthValues)) {
@@ -58,25 +82,21 @@ export async function claimWithdrawStETH(
     // Sum all claimable ETH
     const totalClaimable = claimableEthValues.reduce(
       (sum, value) => sum + BigInt(value),
-      0n
+      BigInt(0)
     );
-
-    if (totalClaimable === 0n) {
-      return toResult('No claimable ETH available.', true);
-    }
 
     // Notify the user about the claim process
     await notify(
-      `Claiming ETH for withdrawal request IDs: ${requestIds.join(', ')}...`
+      `Claiming ${totalClaimable.toString()} ETH for ${requestIds.length} withdrawal requests...`
     );
 
     // Prepare the claim transaction
     const tx = {
-      target: LIDO_WITHDRAWAL_ADDRESS as `0x${string}`, // Lido withdrawal contract address
+      target: LIDO_WITHDRAWAL_ADDRESS as `0x${string}`,
       data: encodeFunctionData({
-        abi: withdrawalAbi, // ABI of the Lido withdrawal contract
-        functionName: 'claimWithdrawals', // Function to call
-        args: [requestIds, account], // Withdrawal request IDs and recipient address
+        abi: withdrawalAbi,
+        functionName: 'claimWithdrawals',
+        args: [requestIdsBigInt, hints],
       }),
     };
 
@@ -87,8 +107,10 @@ export async function claimWithdrawStETH(
       transactions: [tx],
     });
 
-    // Return success message
-    return toResult(`Withdrawal claimed. Transaction: ${result.data}`);
+    // Return success message with claimed amount
+    return toResult(
+      `Successfully claimed ${totalClaimable.toString()} ETH. Transaction: ${result.data}`
+    );
   } catch (error) {
     // Handle errors during the claim process
     return toResult(
