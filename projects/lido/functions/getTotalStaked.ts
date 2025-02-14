@@ -6,9 +6,10 @@ import {
 } from '@heyanon/sdk';
 import { supportedChains, stETH_ADDRESS } from '../constants';
 import stEthAbi from '../abis/stEthAbi';
+import { formatUnits } from 'viem';
 
 interface Props {
-  chainName: string; // Name of the blockchain network (e.g., "Ethereum")
+  chainName: string;
 }
 
 /**
@@ -21,6 +22,11 @@ export async function getTotalStaked(
   { chainName }: Props,
   { getProvider, notify }: FunctionOptions
 ): Promise<FunctionReturn> {
+  // Validate chainName input
+  if (!chainName || typeof chainName !== 'string') {
+    return toResult('Chain name must be a non-empty string', true);
+  }
+
   // Get the chain ID from the chain name
   const chainId = getChainFromName(chainName);
   if (!chainId) {
@@ -40,24 +46,28 @@ export async function getTotalStaked(
     const publicClient = getProvider(chainId);
 
     // Read the total staked ETH from the Lido contract
-    const totalStaked = await publicClient.readContract({
+    const totalStakedBigInt = await publicClient.readContract({
       address: stETH_ADDRESS,
       abi: stEthAbi,
       functionName: 'getTotalPooledEther',
-    });
+    }) as bigint
 
-    // Convert the total staked amount from wei to ETH
-    const totalStakedInETH = Number(totalStaked) / 1e18;
+    // Convert the bigint value to a formatted string using formatUnits
+    const formattedTotal = formatUnits(totalStakedBigInt, 18);
+    
+    // Additional validation to ensure we have a valid number
+    if (formattedTotal === '' || isNaN(Number(formattedTotal))) {
+      return toResult('Failed to format staked amount to a valid number', true);
+    }
 
-    // Return the total staked amount as a string
-    return toResult(totalStakedInETH.toString());
+    return toResult(formattedTotal);
   } catch (error) {
-    // Handle any errors that occur during the process
-    return toResult(
-      `Failed to fetch total staked ETH: ${
-        error instanceof Error ? error.message : 'Unknown error'
-      }`,
-      true
-    );
+    const errorMessage = error instanceof Error 
+      ? error.message
+      : typeof error === 'string' 
+        ? error 
+        : 'Unknown error';
+        
+    return toResult(`Failed to fetch total staked ETH: ${errorMessage}`, true);
   }
 }
