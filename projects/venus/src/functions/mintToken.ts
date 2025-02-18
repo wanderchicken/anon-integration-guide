@@ -13,11 +13,11 @@ interface Props {
 }
 const { checkToApprove } = EVM.utils;
 /**
- * Deposit/Supply Token to Venus protocol.
+ * Mints vTokens by depositing/supplying assets to the Venus Protocol.
  *
- * @param props - Deposit/Supply parameters.
- * @param tools - System tools for blockchain interactions.
- * @returns Borrow result containing the transaction hash.
+ * @param props - Parameters for minting vTokens
+ * @param options - System tools containing provider, transaction sender, and notification functions
+ * @returns Result object with transaction status and details of minted vTokens
  */
 export async function mintToken({ chainName, account, amount, tokenSymbol, pool }: Props, options: FunctionOptions): Promise<FunctionReturn> {
 	const {
