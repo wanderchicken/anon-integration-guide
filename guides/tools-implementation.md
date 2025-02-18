@@ -48,9 +48,10 @@ Each module must include a `tools.ts` file that defines functions for LLM integr
 ## Example Implementation
 
 ```typescript
-import { getChainName } from "@heyanon/sdk";
+import { AiTool, EVM } from '@heyanon/sdk';
 import { supportedChains } from "./constants";
 
+const { getChainName } = EVM.utils;
 export const functions = [
   {
 		name: 'mintToken',
