@@ -1,6 +1,7 @@
-import { Chain } from '@heyanon/sdk';
+import { Chain, EVM } from '@heyanon/sdk';
+const { ChainIds } = EVM.constants;
 
-export const supportedChains = [Chain.ETHEREUM];
+export const supportedChains = [ChainIds[Chain.ETHEREUM]];
 export const fetchLidoAPRApiUrl = "https://eth-api.lido.fi/v1/protocol/steth/apr/last"
 export const fetchTotalRewardsApiEndpoint = "https://reward-history-backend.lido.fi"
 export const stETH_ADDRESS = '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84'; // stETH contract address

@@ -35,6 +35,8 @@ export async function claimWithdrawStETH({ chainName, account, requestIds }: Cla
 
   // Get the chain ID from the chain name
   const chainId = getChainFromName(chainName as EvmChain);
+	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
+
   if (!chainId || !supportedChains.includes(chainId)) {
     return toResult(`Lido protocol is not supported on ${chainName}`, true);
   }
