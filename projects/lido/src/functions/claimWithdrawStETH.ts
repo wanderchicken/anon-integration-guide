@@ -1,12 +1,8 @@
-import { Address, encodeFunctionData, parseEther } from 'viem';
-import {
-  FunctionReturn,
-  FunctionOptions,
-  toResult,
-  getChainFromName,
-} from '@heyanon/sdk';
+import { Address, encodeFunctionData } from 'viem';
+import { EVM, EvmChain, FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
 import { supportedChains, LIDO_WITHDRAWAL_ADDRESS } from '../constants';
 import withdrawalAbi from '../abis/withdrawalAbi';
+const { getChainFromName } = EVM.utils;
 
 interface ClaimWithdrawalProps {
   chainName: string; // Name of the blockchain network (e.g., "Ethereum")
@@ -20,10 +16,12 @@ interface ClaimWithdrawalProps {
  * @param {FunctionOptions} options - Provides the `sendTransactions` and `notify` utilities
  * @returns {Promise<FunctionReturn>} - A promise resolving to a success message or an error message
  */
-export async function claimWithdrawStETH(
-  { chainName, account, requestIds }: ClaimWithdrawalProps,
-  { sendTransactions, notify, getProvider }: FunctionOptions
-): Promise<FunctionReturn> {
+export async function claimWithdrawStETH({ chainName, account, requestIds }: ClaimWithdrawalProps, options: FunctionOptions): Promise<FunctionReturn> {
+  const {
+		evm: { getProvider, sendTransactions },
+		notify,
+	} = options;
+  
   // Input validation
   if (!account) return toResult('Wallet not connected', true);
 
@@ -36,7 +34,7 @@ export async function claimWithdrawStETH(
   const requestIdsBigInt = requestIds.map(id => BigInt(id));
 
   // Get the chain ID from the chain name
-  const chainId = getChainFromName(chainName);
+  const chainId = getChainFromName(chainName as EvmChain);
   if (!chainId || !supportedChains.includes(chainId)) {
     return toResult(`Lido protocol is not supported on ${chainName}`, true);
   }
