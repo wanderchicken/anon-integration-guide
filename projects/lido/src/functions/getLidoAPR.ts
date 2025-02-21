@@ -1,9 +1,6 @@
-import {
-  FunctionReturn,
-  toResult,
-  getChainFromName,
-} from '@heyanon/sdk';
+import { EVM, EvmChain, FunctionReturn, toResult } from '@heyanon/sdk';
 import { fetchLidoAPRApiUrl, supportedChains } from '../constants';
+const { getChainFromName } = EVM.utils;
 
 
 /**
@@ -12,7 +9,7 @@ import { fetchLidoAPRApiUrl, supportedChains } from '../constants';
 export async function getLidoAPR(
   { chainName }: { chainName: string }
 ): Promise<FunctionReturn> {
-  const chainId = getChainFromName(chainName);
+  const chainId = getChainFromName(chainName as EvmChain);
   if (!chainId || !supportedChains.includes(chainId)) {
     return toResult(`Lido protocol is not supported on ${chainName}`, true);
   }

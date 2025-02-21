@@ -1,14 +1,8 @@
 import { Address, encodeFunctionData, parseUnits } from "viem";
-import {
-  FunctionReturn,
-  FunctionOptions,
-  TransactionParams,
-  toResult,
-  getChainFromName,
-  checkToApprove
-} from "@heyanon/sdk";
+import { EVM, EvmChain, FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
 import { supportedChains, wstETH_ADDRESS, stETH_ADDRESS } from "../constants";
 import wstETHAbi  from "../abis/wstETHAbi"
+const { checkToApprove, getChainFromName } = EVM.utils;
 
 interface Props {
   chainName: string;
@@ -22,15 +16,18 @@ interface Props {
  * @param tools - System tools for blockchain interactions.
  * @returns Transaction result.
  */
-export async function wrapStETH(
-  { chainName, account, amount }: Props,
-  { sendTransactions, notify, getProvider }: FunctionOptions
-): Promise<FunctionReturn> {
+export async function wrapStETH( { chainName, account, amount }: Props, options: FunctionOptions): Promise<FunctionReturn> {
+
+  const {
+		evm: { getProvider, sendTransactions },
+		notify,
+	} = options;
+
   // Check wallet connection
   if (!account) return toResult("Wallet not connected", true);
 
   // Validate chain
-  const chainId = getChainFromName(chainName);
+  const chainId = getChainFromName(chainName as EvmChain);
   if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
   if (!supportedChains.includes(chainId))
     return toResult(`Lido protocol is not supported on ${chainName}`, true);

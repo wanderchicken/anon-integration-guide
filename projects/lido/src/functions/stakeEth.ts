@@ -1,13 +1,9 @@
 import { Address, encodeFunctionData, parseEther } from 'viem';
-import {
-  FunctionReturn,
-  FunctionOptions,
-  TransactionParams,
-  toResult,
-  getChainFromName,
-} from '@heyanon/sdk';
 import { supportedChains, stETH_ADDRESS } from '../constants';
 import stEthAbi from '../abis/stEthAbi';
+import { EVM, EvmChain, FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
+const { getChainFromName } = EVM.utils;
+
 
 interface Props {
   chainName: string; // Blockchain network name
@@ -21,16 +17,19 @@ interface Props {
  * @param {FunctionOptions} options - An object containing `sendTransactions`, `getProvider`, and `notify` utilities.
  * @returns {Promise<FunctionReturn>} - A promise that resolves to a success message or an error message.
  */
-export async function stakeETH(
-  { chainName, account, amount }: Props,
-  { sendTransactions, notify }: FunctionOptions
-): Promise<FunctionReturn> {
+export async function stakeETH( { chainName, account, amount }: Props, options: FunctionOptions): Promise<FunctionReturn> {
+  
+  const {
+		evm: { sendTransactions },
+		notify,
+	} = options;
+  
   if (!account) {
     return toResult('Wallet not connected', true);
   }
 
   // Get the chain ID from the chain name
-  const chainId = getChainFromName(chainName);
+  const chainId = getChainFromName(chainName as EvmChain);
   if (!chainId) {
     return toResult(`Unsupported chain name: ${chainName}`, true);
   }
@@ -51,7 +50,7 @@ export async function stakeETH(
 
     await notify(`Preparing to stake ${amount} ETH...`);
 
-    const tx: TransactionParams = {
+    const tx: EVM.types.TransactionParams = {
       target: stETH_ADDRESS, // Lido contract address
       data: encodeFunctionData({
         abi: stEthAbi,

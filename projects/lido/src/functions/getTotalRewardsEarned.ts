@@ -1,10 +1,8 @@
 import { Address, formatUnits } from 'viem';
-import {
-  FunctionReturn,
-  toResult,
-  getChainFromName,
-} from '@heyanon/sdk';
 import { fetchTotalRewardsApiEndpoint, supportedChains } from '../constants';
+import { EVM, EvmChain, FunctionReturn, toResult } from '@heyanon/sdk';
+const { getChainFromName } = EVM.utils;
+
 
 interface StEthInfoProps {
   chainName: string;
@@ -14,12 +12,10 @@ interface StEthInfoProps {
 /**
  * Fetches the total rewards earned by the user on Lido using sharesOf.
  */
-export async function getTotalRewardsEarned(
-  { chainName, account }: StEthInfoProps,
-): Promise<FunctionReturn> {
+export async function getTotalRewardsEarned( { chainName, account }: StEthInfoProps): Promise<FunctionReturn> {
   if (!account) return toResult('Wallet not connected', true);
 
-  const chainId = getChainFromName(chainName);
+  const chainId = getChainFromName(chainName as EvmChain);
   if (!chainId || !supportedChains.includes(chainId)) {
     return toResult(`Lido protocol is not supported on ${chainName}`, true);
   }

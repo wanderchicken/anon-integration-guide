@@ -1,12 +1,8 @@
 import { Address, encodeFunctionData, parseEther } from 'viem';
-import {
-  FunctionReturn,
-  FunctionOptions,
-  toResult,
-  getChainFromName,
-} from '@heyanon/sdk';
 import { supportedChains, wstETH_ADDRESS } from '../constants';
 import wstETHAbi from '../abis/wstETHAbi';
+import { EVM, EvmChain, FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
+const { getChainFromName } = EVM.utils;
 
 interface StEthInfoProps {
   chainName: string;
@@ -17,14 +13,17 @@ interface StEthInfoProps {
 /**
  * Unwraps wstETH back into stETH.
  */
-export async function unwrapWstETH(
-  { chainName, account, amount }: StEthInfoProps,
-  { sendTransactions, notify }: FunctionOptions
-): Promise<FunctionReturn> {
+export async function unwrapWstETH({ chainName, account, amount }: StEthInfoProps, options: FunctionOptions): Promise<FunctionReturn> {
+  
+  const {
+		evm: { sendTransactions },
+		notify,
+	} = options;
+
   if (!account) return toResult('Wallet not connected', true);
   if (!amount) return toResult('Invalid amount.', true);
 
-  const chainId = getChainFromName(chainName);
+  const chainId = getChainFromName(chainName as EvmChain);
   if (!chainId || !supportedChains.includes(chainId)) {
     return toResult(`Lido protocol is not supported on ${chainName}`, true);
   }
@@ -33,7 +32,7 @@ export async function unwrapWstETH(
     const amountInWei = parseEther(amount);
     await notify(`Unwrapping ${amount} wstETH to stETH...`);
 
-    const tx = {
+    const tx : EVM.types.TransactionParams = {
       target: wstETH_ADDRESS as `0x${string}`,
       data: encodeFunctionData({
         abi: wstETHAbi,

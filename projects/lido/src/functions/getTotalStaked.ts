@@ -1,12 +1,9 @@
-import {
-  FunctionReturn,
-  FunctionOptions,
-  toResult,
-  getChainFromName,
-} from '@heyanon/sdk';
 import { supportedChains, stETH_ADDRESS } from '../constants';
 import stEthAbi from '../abis/stEthAbi';
 import { formatUnits } from 'viem';
+import { EVM, EvmChain, FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
+const { getChainFromName } = EVM.utils;
+
 
 interface Props {
   chainName: string;
@@ -18,17 +15,20 @@ interface Props {
  * @param {FunctionOptions} options - An object containing `getProvider` and `notify` utilities.
  * @returns {Promise<FunctionReturn>} - A promise that resolves to the total staked ETH or an error message.
  */
-export async function getTotalStaked(
-  { chainName }: Props,
-  { getProvider, notify }: FunctionOptions
-): Promise<FunctionReturn> {
+export async function getTotalStaked( { chainName }: Props, options: FunctionOptions): Promise<FunctionReturn> {
+  
+  const {
+		evm: { getProvider },
+		notify,
+	} = options;
+  
   // Validate chainName input
   if (!chainName || typeof chainName !== 'string') {
     return toResult('Chain name must be a non-empty string', true);
   }
 
   // Get the chain ID from the chain name
-  const chainId = getChainFromName(chainName);
+  const chainId = getChainFromName(chainName as EvmChain);
   if (!chainId) {
     return toResult(`Unsupported chain name: ${chainName}`, true);
   }

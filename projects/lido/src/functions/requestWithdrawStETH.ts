@@ -1,14 +1,8 @@
 import { Address, encodeFunctionData, parseUnits } from "viem";
-import {
-  FunctionReturn,
-  FunctionOptions,
-  TransactionParams,
-  toResult,
-  getChainFromName,
-  checkToApprove
-} from "@heyanon/sdk";
+import { EVM, EvmChain, FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
 import { supportedChains, LIDO_WITHDRAWAL_ADDRESS, stETH_ADDRESS } from "../constants";
 import  withdrawalAbi  from "../abis/withdrawalAbi";
+const { checkToApprove, getChainFromName } = EVM.utils;
 
 interface WithdrawProps {
   chainName: string;
@@ -22,15 +16,18 @@ interface WithdrawProps {
  * @param tools - System tools for blockchain interactions.
  * @returns Transaction result.
  */
-export async function requestWithdrawStETH(
-  { chainName, account, amount }: WithdrawProps,
-  { sendTransactions, notify, getProvider }: FunctionOptions
-): Promise<FunctionReturn> {
+export async function requestWithdrawStETH({ chainName, account, amount }: WithdrawProps, options: FunctionOptions): Promise<FunctionReturn> {
+  
+  const {
+		evm: { getProvider, sendTransactions },
+		notify,
+	} = options;
+
   // Check wallet connection
   if (!account) return toResult("Wallet not connected", true);
 
   // Validate chain
-  const chainId = getChainFromName(chainName);
+  const chainId = getChainFromName(chainName as EvmChain);
   if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
   if (!supportedChains.includes(chainId))
     return toResult(`Lido protocol is not supported on ${chainName}`, true);
@@ -43,7 +40,7 @@ export async function requestWithdrawStETH(
   await notify("Checking stETH allowance for withdrawal...");
 
   const provider = getProvider(chainId);
-  const transactions: TransactionParams[] = [];
+  const transactions: EVM.types.TransactionParams[] = [];
 
   // Check and prepare approve transaction if needed
   await checkToApprove({
@@ -58,7 +55,7 @@ export async function requestWithdrawStETH(
   });
 
   // Prepare withdrawal transaction
-  const withdrawTx: TransactionParams = {
+  const withdrawTx: EVM.types.TransactionParams = {
     target: LIDO_WITHDRAWAL_ADDRESS,
     data: encodeFunctionData({
       abi: withdrawalAbi,

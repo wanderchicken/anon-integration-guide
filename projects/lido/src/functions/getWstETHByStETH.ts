@@ -1,12 +1,8 @@
 import { formatUnits, Address, parseEther } from 'viem';
-import {
-  FunctionReturn,
-  FunctionOptions,
-  toResult,
-  getChainFromName,
-} from '@heyanon/sdk';
 import { supportedChains, wstETH_ADDRESS } from '../constants';
 import wstETHAbi from '../abis/wstETHAbi';
+import { EVM, EvmChain, FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
+const { getChainFromName } = EVM.utils;
 
 interface StEthInfoProps {
   chainName: string;
@@ -17,13 +13,15 @@ interface StEthInfoProps {
 /**
  * Converts stETH to wstETH value.
  */
-export async function getWstETHByStETH(
-  { chainName, amount }: StEthInfoProps,
-  { getProvider }: FunctionOptions
-): Promise<FunctionReturn> {
+export async function getWstETHByStETH({ chainName, amount }: StEthInfoProps, options: FunctionOptions): Promise<FunctionReturn> {
+  
+  const {
+		evm: { getProvider },
+	} = options;
+  
   if (!amount) return toResult('Invalid amount.', true);
 
-  const chainId = getChainFromName(chainName);
+  const chainId = getChainFromName(chainName as EvmChain);
   if (!chainId || !supportedChains.includes(chainId)) {
     return toResult(`Lido protocol is not supported on ${chainName}`, true);
   }

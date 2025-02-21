@@ -1,12 +1,8 @@
 import { Address, formatUnits } from 'viem';
-import {
-  FunctionReturn,
-  toResult,
-  getChainFromName,
-  FunctionOptions,
-} from '@heyanon/sdk';
+import { EVM, EvmChain, FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
 import { supportedChains, stETH_ADDRESS } from '../constants';
 import stEthAbi from '../abis/stEthAbi';
+const { getChainFromName } = EVM.utils;
 
 // Define the interface for the function props
 interface Props {
@@ -20,15 +16,17 @@ interface Props {
  * @param {FunctionOptions} options - An object containing the `getProvider` function to interact with the blockchain.
  * @returns {Promise<FunctionReturn>} - A promise that resolves to the stETH balance or an error message.
  */
-export async function getStETHBalance(
-  { chainName, account }: Props,
-  { getProvider }: FunctionOptions
-): Promise<FunctionReturn> {
+export async function getStETHBalance( { chainName, account }: Props, options: FunctionOptions ): Promise<FunctionReturn> {
+
+  const {
+		evm: { getProvider },
+	} = options;
+
   // Check if the account address is provided
   if (!account) return toResult('Wallet not connected', true);
 
   // Get the chain ID from the chain name
-  const chainId = getChainFromName(chainName);
+  const chainId = getChainFromName(chainName as EvmChain);
   if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
 
   // Check if the chain is supported by the protocol
