@@ -7,26 +7,31 @@ const { getChainFromName } = EVM.utils;
 interface StEthInfoProps {
   chainName: string;
   account: Address;
-  amount: string; // Amount to wrap/unwrap
+  amount: string; 
 }
 
 /**
  * Converts wstETH to stETH value.
  */
-export async function getStETHByWstETH( { chainName, amount }: StEthInfoProps, options: FunctionOptions): Promise<FunctionReturn> {
-  const {
-    evm: { getProvider },
-  } = options;
+export async function getStETHByWstETH( { chainName, amount }: StEthInfoProps,  { evm: { getProvider } }: FunctionOptions): Promise<FunctionReturn> {
   
-  if (!amount) return toResult('Invalid amount.', true);
-
-  const chainId = getChainFromName(chainName as EvmChain);
-  if (!chainId || !supportedChains.includes(chainId)) {
-    return toResult(`Lido protocol is not supported on ${chainName}`, true);
-  }
+  
 
   try {
+
+    if (!amount || typeof amount !== 'string' || isNaN(Number(amount)) || Number(amount) <= 0) {
+      return toResult('Amount must be a valid number greater than 0', true);
+    }
+  
+    const chainId = getChainFromName(chainName as EvmChain);
+    if (!chainId || !supportedChains.includes(chainId)) {
+      return toResult(`Lido protocol is not supported on ${chainName}`, true);
+    }
+    
     const publicClient = getProvider(chainId);
+    if (!publicClient) {
+      return toResult(`Failed to get provider for chain: ${chainName}`, true);
+    }
     const amountInWei = parseEther(amount);
     const stEthAmount = (await publicClient.readContract({
       address: wstETH_ADDRESS,

@@ -16,28 +16,30 @@ interface Props {
  * @param {FunctionOptions} options - An object containing the `getProvider` function to interact with the blockchain.
  * @returns {Promise<FunctionReturn>} - A promise that resolves to the stETH balance or an error message.
  */
-export async function getStETHBalance( { chainName, account }: Props, options: FunctionOptions ): Promise<FunctionReturn> {
+export async function getStETHBalance( { chainName, account }: Props, { evm: { getProvider } }: FunctionOptions ): Promise<FunctionReturn> {
 
-  const {
-		evm: { getProvider },
-	} = options;
-
-  // Check if the account address is provided
-  if (!account) return toResult('Wallet not connected', true);
-
-  // Get the chain ID from the chain name
-  const chainId = getChainFromName(chainName as EvmChain);
-  if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
-
-  // Check if the chain is supported by the protocol
-  if (!supportedChains.includes(chainId)) {
-    return toResult(`Lido protocol is not supported on ${chainName}`, true);
-  }
-
-  // Get the provider (public client) for the specified chain
-  const publicClient = getProvider(chainId);
+ 
 
   try {
+
+    // Check if the account address is provided
+    if (!account) return toResult('Wallet not connected', true);
+
+    // Get the chain ID from the chain name
+    const chainId = getChainFromName(chainName as EvmChain);
+    if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
+
+    // Check if the chain is supported by the protocol
+    if (!supportedChains.includes(chainId)) {
+      return toResult(`Lido protocol is not supported on ${chainName}`, true);
+    }
+
+    // Get the provider (public client) for the specified chain
+    const publicClient = getProvider(chainId);
+    if (!publicClient) {
+      return toResult(`Failed to get provider for chain: ${chainName}`, true);
+    }
+
     // Read the stETH balance from the Lido contract
     const balance = await publicClient.readContract({
       address: stETH_ADDRESS, // Address of the Lido stETH contract

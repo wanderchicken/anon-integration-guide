@@ -2,6 +2,7 @@ import { Address, encodeFunctionData, parseEther } from 'viem';
 import { supportedChains, stETH_ADDRESS } from '../constants';
 import stEthAbi from '../abis/stEthAbi';
 import { EVM, EvmChain, FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
+import { validateWallet } from '../utils';
 const { getChainFromName } = EVM.utils;
 
 
@@ -24,25 +25,21 @@ export async function stakeETH( { chainName, account, amount }: Props, options: 
 		notify,
 	} = options;
   
-  if (!account) {
-    return toResult('Wallet not connected', true);
-  }
+  // Check wallet connection
+  const wallet = validateWallet({ account });
+	if (!wallet.success) {
+		return toResult(wallet.errorMessage, true);
+	}
 
-  // Get the chain ID from the chain name
+  // Validate amount
+  if (!amount || typeof amount !== 'string' || isNaN(Number(amount)) || Number(amount) <= 0) {
+		return toResult('Amount must be a valid number greater than 0', true);
+	}
+  // Validate chain
   const chainId = getChainFromName(chainName as EvmChain);
-  if (!chainId) {
-    return toResult(`Unsupported chain name: ${chainName}`, true);
-  }
-
-  // Check if the chain is supported by the protocol
-  if (!supportedChains.includes(chainId)) {
+  if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
+  if (!supportedChains.includes(chainId))
     return toResult(`Lido protocol is not supported on ${chainName}`, true);
-  }
-
-  // Validate the stake amount
-  if (!amount || parseFloat(amount) <= 0) {
-    return toResult('Invalid stake amount', true);
-  }
 
   try {
     const amountInWei = parseEther(amount);

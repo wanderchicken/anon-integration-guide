@@ -2,6 +2,7 @@ import { Address, encodeFunctionData, parseUnits } from "viem";
 import { EVM, EvmChain, FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
 import { supportedChains, LIDO_WITHDRAWAL_ADDRESS, stETH_ADDRESS } from "../constants";
 import  withdrawalAbi  from "../abis/withdrawalAbi";
+import { validateWallet } from "../utils";
 const { checkToApprove, getChainFromName } = EVM.utils;
 
 interface WithdrawProps {
@@ -24,56 +25,73 @@ export async function requestWithdrawStETH({ chainName, account, amount }: Withd
 	} = options;
 
   // Check wallet connection
-  if (!account) return toResult("Wallet not connected", true);
+  const wallet = validateWallet({ account });
+  if (!wallet.success) {
+    return toResult(wallet.errorMessage, true);
+  }
 
+  // Validate amount
+  if (!amount || typeof amount !== 'string' || isNaN(Number(amount)) || Number(amount) <= 0) {
+    return toResult('Amount must be a valid number greater than 0', true);
+  }
   // Validate chain
   const chainId = getChainFromName(chainName as EvmChain);
   if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
   if (!supportedChains.includes(chainId))
     return toResult(`Lido protocol is not supported on ${chainName}`, true);
 
-  // Validate amount
-  const amountInWei = parseUnits(amount, 18);
-  if (amountInWei === 0n)
-    return toResult("Amount must be greater than 0", true);
-
-  await notify("Checking stETH allowance for withdrawal...");
-
   const provider = getProvider(chainId);
-  const transactions: EVM.types.TransactionParams[] = [];
+  if (!provider) {
+    return toResult(`Failed to get provider for chain: ${chainName}`, true);
+  }
 
-  // Check and prepare approve transaction if needed
-  await checkToApprove({
-    args: {
-      account,
-      target: stETH_ADDRESS,
-      spender: LIDO_WITHDRAWAL_ADDRESS,
-      amount: amountInWei,
-    },
-    provider,
-    transactions,
-  });
+  try{
+    const amountInWei = parseUnits(amount, 18);
+    await notify("Checking stETH allowance for withdrawal...");
 
-  // Prepare withdrawal transaction
-  const withdrawTx: EVM.types.TransactionParams = {
-    target: LIDO_WITHDRAWAL_ADDRESS,
-    data: encodeFunctionData({
-      abi: withdrawalAbi,
-      functionName: "requestWithdrawals",
-      args: [[amountInWei], account],
-    }),
-  };
-  transactions.push(withdrawTx);
+    const transactions: EVM.types.TransactionParams[] = [];
 
-  await notify("Sending transaction to request stETH withdrawal...");
+    // Check and prepare approve transaction if needed
+    await checkToApprove({
+      args: {
+        account,
+        target: stETH_ADDRESS,
+        spender: LIDO_WITHDRAWAL_ADDRESS,
+        amount: amountInWei,
+      },
+      provider,
+      transactions,
+    });
 
-  // Sign and send transaction
-  const result = await sendTransactions({ chainId, account, transactions });
-  const withdrawMessage = result.data[result.data.length - 1];
+    // Prepare withdrawal transaction
+    const withdrawTx: EVM.types.TransactionParams = {
+      target: LIDO_WITHDRAWAL_ADDRESS,
+      data: encodeFunctionData({
+        abi: withdrawalAbi,
+        functionName: "requestWithdrawals",
+        args: [[amountInWei], account],
+      }),
+    };
+    transactions.push(withdrawTx);
 
-  return toResult(
-    result.isMultisig
-      ? withdrawMessage.message
-      : `Withdrawal request of ${amount} stETH submitted. ${withdrawMessage.message}`
-  );
+    await notify("Sending transaction to request stETH withdrawal...");
+
+    // Sign and send transaction
+    const result = await sendTransactions({ chainId, account, transactions });
+    const withdrawMessage = result.data[result.data.length - 1];
+
+    return toResult(
+      result.isMultisig
+        ? withdrawMessage.message
+        : `Withdrawal request of ${amount} stETH submitted. ${withdrawMessage.message}`
+    );
+    }catch(error){
+      return toResult(
+        `Failed to request withdrawal for ETH: ${
+          error instanceof Error ? error.message : 'Unknown error'
+        }`,
+        true
+      );
+    }
+  
 }

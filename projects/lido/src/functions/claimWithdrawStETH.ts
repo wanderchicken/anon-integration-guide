@@ -2,6 +2,7 @@ import { Address, encodeFunctionData } from 'viem';
 import { EVM, EvmChain, FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
 import { supportedChains, LIDO_WITHDRAWAL_ADDRESS } from '../constants';
 import withdrawalAbi from '../abis/withdrawalAbi';
+import { validateWallet } from '../utils';
 const { getChainFromName } = EVM.utils;
 
 interface ClaimWithdrawalProps {
@@ -22,8 +23,11 @@ export async function claimWithdrawStETH({ chainName, account, requestIds }: Cla
 		notify,
 	} = options;
   
-  // Input validation
-  if (!account) return toResult('Wallet not connected', true);
+  // Check wallet connection
+  const wallet = validateWallet({ account });
+  if (!wallet.success) {
+    return toResult(wallet.errorMessage, true);
+  }
 
   if (!Array.isArray(requestIds) || requestIds.length === 0) {
     return toResult('Invalid request: No valid withdrawal request IDs provided.', true);
@@ -33,16 +37,18 @@ export async function claimWithdrawStETH({ chainName, account, requestIds }: Cla
   const hints = requestIds.map(()=>BigInt(0))
   const requestIdsBigInt = requestIds.map(id => BigInt(id));
 
-  // Get the chain ID from the chain name
+  // Validate chain
   const chainId = getChainFromName(chainName as EvmChain);
-	if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
-
-  if (!chainId || !supportedChains.includes(chainId)) {
+  if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
+  if (!supportedChains.includes(chainId))
     return toResult(`Lido protocol is not supported on ${chainName}`, true);
+
+  const publicClient = getProvider(chainId);
+  if (!publicClient) {
+    return toResult(`Failed to get provider for chain: ${chainName}`, true);
   }
 
   try {
-    const publicClient = getProvider(chainId);
 
     // Check withdrawal status for all requests
     const withdrawalStatus = await publicClient.readContract({

@@ -2,6 +2,7 @@ import { Address, encodeFunctionData, parseUnits } from "viem";
 import { EVM, EvmChain, FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
 import { supportedChains, wstETH_ADDRESS, stETH_ADDRESS } from "../constants";
 import wstETHAbi  from "../abis/wstETHAbi"
+import { validateWallet } from "../utils";
 const { checkToApprove, getChainFromName } = EVM.utils;
 
 interface Props {
@@ -24,24 +25,31 @@ export async function wrapStETH( { chainName, account, amount }: Props, options:
 	} = options;
 
   // Check wallet connection
-  if (!account) return toResult("Wallet not connected", true);
+  const wallet = validateWallet({ account });
+	if (!wallet.success) {
+		return toResult(wallet.errorMessage, true);
+	}
 
+  // Validate amount
+  if (!amount || typeof amount !== 'string' || isNaN(Number(amount)) || Number(amount) <= 0) {
+		return toResult('Amount must be a valid number greater than 0', true);
+	}
   // Validate chain
   const chainId = getChainFromName(chainName as EvmChain);
   if (!chainId) return toResult(`Unsupported chain name: ${chainName}`, true);
   if (!supportedChains.includes(chainId))
     return toResult(`Lido protocol is not supported on ${chainName}`, true);
 
-  // Validate amount
-  const amountInWei = parseUnits(amount, 18);
-  if (amountInWei === 0n)
-    return toResult("Amount must be greater than 0", true);
-
-  await notify("Checking stETH allowance for wrapping...");
 
   const provider = getProvider(chainId);
-  const transactions: TransactionParams[] = [];
+  if (!provider) {
+    return toResult(`Failed to get provider for chain: ${chainName}`, true);
+  }
 
+  try{
+  await notify("Checking stETH allowance for wrapping...");
+  const amountInWei = parseUnits(amount, 18);
+  const transactions: EVM.types.TransactionParams[] = [];
   // Check and prepare approve transaction if needed
   await checkToApprove({
     args: {
@@ -55,7 +63,7 @@ export async function wrapStETH( { chainName, account, amount }: Props, options:
   });
 
   // Prepare wrap transaction
-  const wrapTx: TransactionParams = {
+  const wrapTx: EVM.types.TransactionParams = {
     target: wstETH_ADDRESS,
     data: encodeFunctionData({
       abi: wstETHAbi,
@@ -76,4 +84,13 @@ export async function wrapStETH( { chainName, account, amount }: Props, options:
       ? wrapMessage.message
       : `Successfully wrapped ${amount} stETH to wstETH. ${wrapMessage.message}`
   );
+
+  }catch(error){
+    return toResult(
+      `Failed to wrap ETH: ${
+        error instanceof Error ? error.message : 'Unknown error'
+      }`,
+      true
+    );
+  }
 }
