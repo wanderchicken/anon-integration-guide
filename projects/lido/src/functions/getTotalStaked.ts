@@ -19,8 +19,6 @@ export async function getTotalStaked( { chainName }: Props, options: FunctionOpt
   
   const {evm: { getProvider }, notify} = options;
   
-  
-
   try {
 
     // Validate chainName input

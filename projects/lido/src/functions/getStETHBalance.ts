@@ -2,6 +2,7 @@ import { Address, formatUnits } from 'viem';
 import { EVM, EvmChain, FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
 import { supportedChains, stETH_ADDRESS } from '../constants';
 import stEthAbi from '../abis/stEthAbi';
+import { validateWallet } from '../utils';
 const { getChainFromName } = EVM.utils;
 
 // Define the interface for the function props
@@ -22,8 +23,11 @@ export async function getStETHBalance( { chainName, account }: Props, { evm: { g
 
   try {
 
-    // Check if the account address is provided
-    if (!account) return toResult('Wallet not connected', true);
+    // Check wallet connection
+    const wallet = validateWallet({ account });
+    if (!wallet.success) {
+      return toResult(wallet.errorMessage, true);
+    }
 
     // Get the chain ID from the chain name
     const chainId = getChainFromName(chainName as EvmChain);

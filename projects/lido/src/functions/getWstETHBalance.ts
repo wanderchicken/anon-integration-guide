@@ -2,6 +2,7 @@ import { Address, formatUnits } from 'viem';
 import { supportedChains, wstETH_ADDRESS } from '../constants';
 import wstETHAbi from '../abis/wstETHAbi';
 import { EVM, EvmChain, FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
+import { validateWallet } from '../utils';
 const { getChainFromName } = EVM.utils;
 
 interface StEthInfoProps {
@@ -22,7 +23,11 @@ export async function getWstETHBalance( { chainName, account }: StEthInfoProps, 
 
   try {
 
-    if (!account) return toResult('Wallet not connected', true);
+    // Check wallet connection
+    const wallet = validateWallet({ account });
+    if (!wallet.success) {
+      return toResult(wallet.errorMessage, true);
+    }
 
     // Validate chainName input
     if (!chainName || typeof chainName !== 'string') {

@@ -1,4 +1,4 @@
-import { Address, encodeFunctionData } from 'viem';
+import { Address, encodeFunctionData, parseEther } from 'viem';
 import { EVM, EvmChain, FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
 import { supportedChains, LIDO_WITHDRAWAL_ADDRESS } from '../constants';
 import withdrawalAbi from '../abis/withdrawalAbi';
@@ -34,8 +34,8 @@ export async function claimWithdrawStETH({ chainName, account, requestIds }: Cla
   }
 
 
-  const hints = requestIds.map(()=>BigInt(0))
-  const requestIdsBigInt = requestIds.map(id => BigInt(id));
+  const hints = requestIds.map(()=>parseEther('0'))
+  const requestIdsBigInt = requestIds.map(id => parseEther(String(id)));
 
   // Validate chain
   const chainId = getChainFromName(chainName as EvmChain);

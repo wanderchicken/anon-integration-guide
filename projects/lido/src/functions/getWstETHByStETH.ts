@@ -19,8 +19,6 @@ export async function getWstETHByStETH({ chainName, amount }: StEthInfoProps, {e
   
 
   try {
-
-
     if (!amount || typeof amount !== 'string' || isNaN(Number(amount)) || Number(amount) <= 0) {
       return toResult('Amount must be a valid number greater than 0', true);
     }
