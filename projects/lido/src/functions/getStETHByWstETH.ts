@@ -13,12 +13,12 @@ interface StEthInfoProps {
 /**
  * Converts wstETH to stETH value.
  */
-export async function getStETHByWstETH( { chainName, amount }: StEthInfoProps,  { evm: { getProvider } }: FunctionOptions): Promise<FunctionReturn> {
+export async function getStETHByWstETH( { chainName, amount }: StEthInfoProps,  options: FunctionOptions): Promise<FunctionReturn> {
   
-  
-
+  const {
+		evm: { getProvider },
+	} = options;
   try {
-
     if (!amount || typeof amount !== 'string' || isNaN(Number(amount)) || Number(amount) <= 0) {
       return toResult('Amount must be a valid number greater than 0', true);
     }

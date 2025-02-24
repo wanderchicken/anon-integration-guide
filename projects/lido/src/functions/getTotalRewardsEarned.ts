@@ -1,7 +1,6 @@
 import { Address, formatUnits } from 'viem';
 import { fetchTotalRewardsApiEndpoint, supportedChains } from '../constants';
 import { EVM, EvmChain, FunctionReturn, toResult } from '@heyanon/sdk';
-import { validateWallet } from '../utils';
 const { getChainFromName } = EVM.utils;
 
 
@@ -15,14 +14,10 @@ interface StEthInfoProps {
  */
 export async function getTotalRewardsEarned( { chainName, account }: StEthInfoProps): Promise<FunctionReturn> {
   
-
   try {
 
-    // Check wallet connection
-    const wallet = validateWallet({ account });
-    if (!wallet.success) {
-      return toResult(wallet.errorMessage, true);
-    }
+    if (!account) return toResult('Wallet not connected', true);
+
 
     const chainId = getChainFromName(chainName as EvmChain);
     if (!chainId || !supportedChains.includes(chainId)) {
