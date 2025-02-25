@@ -29,7 +29,8 @@ export async function claimWithdrawStETH({ chainName, account, requestIds }: Cla
     }
 
     const hints = requestIds.map(() => parseEther('0'));
-    const requestIdsBigInt = requestIds.map((id) => parseEther(String(id)));
+    const parsedRequestIds = requestIds.map((id) => parseEther(String(id)));
+
 
     // Validate chain
     const chainId = getChainFromName(chainName as EvmChain);
@@ -47,7 +48,7 @@ export async function claimWithdrawStETH({ chainName, account, requestIds }: Cla
             address: LIDO_WITHDRAWAL_ADDRESS,
             abi: withdrawalAbi,
             functionName: 'getWithdrawalStatus',
-            args: [requestIdsBigInt],
+            args: [parsedRequestIds],
         });
 
         if (!Array.isArray(withdrawalStatus)) {
@@ -64,7 +65,7 @@ export async function claimWithdrawStETH({ chainName, account, requestIds }: Cla
             address: LIDO_WITHDRAWAL_ADDRESS,
             abi: withdrawalAbi,
             functionName: 'getClaimableEther',
-            args: [requestIdsBigInt, hints],
+            args: [parsedRequestIds, hints],
         });
 
         if (!Array.isArray(claimableEthValues)) {
@@ -83,7 +84,7 @@ export async function claimWithdrawStETH({ chainName, account, requestIds }: Cla
             data: encodeFunctionData({
                 abi: withdrawalAbi,
                 functionName: 'claimWithdrawals',
-                args: [requestIdsBigInt, hints],
+                args: [parsedRequestIds, hints],
             }),
         };
 

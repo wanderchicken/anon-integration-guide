@@ -1,5 +1,5 @@
 import { Address, encodeFunctionData, parseEther } from 'viem';
-import { supportedChains, stETH_ADDRESS } from '../constants';
+import { supportedChains, stETH_ADDRESS, REFERRAL_ADDRESS } from '../constants';
 import stEthAbi from '../abis/stEthAbi';
 import { EVM, EvmChain, FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
 const { getChainFromName } = EVM.utils;
@@ -35,7 +35,6 @@ export async function stakeETH({ chainName, account, amount }: Props, options: F
 
     try {
         const amountInWei = parseEther(amount);
-        const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'; // Referral address
 
         await notify(`Preparing to stake ${amount} ETH...`);
 
@@ -44,7 +43,7 @@ export async function stakeETH({ chainName, account, amount }: Props, options: F
             data: encodeFunctionData({
                 abi: stEthAbi,
                 functionName: 'submit',
-                args: [ZERO_ADDRESS], // ✅ Passing referral address (required)
+                args: [REFERRAL_ADDRESS], // ✅ Passing referral address (required)
             }),
             value: amountInWei, // ✅ ETH is passed correctly
         };
