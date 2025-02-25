@@ -10,17 +10,19 @@ interface StEthInfoProps {
 }
 
 /**
- * Fetches the total rewards earned by the user on Lido using sharesOf.
+ * Fetches the total rewards earned by the user on Lido using Lido Reward history Api.
  */
 export async function getTotalRewardsEarned( { chainName, account }: StEthInfoProps): Promise<FunctionReturn> {
-  if (!account) return toResult('Wallet not connected', true);
-
-  const chainId = getChainFromName(chainName as EvmChain);
-  if (!chainId || !supportedChains.includes(chainId)) {
-    return toResult(`Lido protocol is not supported on ${chainName}`, true);
-  }
-
+  
   try {
+
+    if (!account) return toResult('Wallet not connected', true);
+
+
+    const chainId = getChainFromName(chainName as EvmChain);
+    if (!chainId || !supportedChains.includes(chainId)) {
+      return toResult(`Lido protocol is not supported on ${chainName}`, true);
+    }
 
     const response = await fetch(`${fetchTotalRewardsApiEndpoint}/?address=${account}&onlyRewards=true`);
     if (!response.ok) {

@@ -1,71 +1,72 @@
-# **Lido Protocol - Liquid Staking for Ethereum**
+# **Lido Protocol Integration**
 
 ## **Overview**
 
-Lido is a decentralized liquid staking protocol for Ethereum that allows users to stake ETH while maintaining liquidity. By staking ETH through Lido, users receive **stETH**, a liquid staking token, in return. stETH can be used across DeFi platforms while continuing to earn staking rewards.
+Lido is a decentralized liquid staking protocol for Ethereum that allows users to stake ETH while maintaining liquidity. By staking ETH through Lido, users receive **stETH**, a liquid staking token, which continues to earn staking rewards and can be used across DeFi platforms.
 
-## **What Lido Protocol Can Do for You**
+### **Main Features**
 
-- **Liquid Staking**: Stake ETH and receive stETH, a liquid staking token.
-- **Withdrawals**: Unstake stETH to retrieve ETH, including accumulated rewards.
-- **DeFi Compatibility**: Utilize stETH in DeFi protocols without waiting for Ethereum withdrawals.
-- **Real-time Rewards**: Earn staking rewards that are reflected in your stETH balance.
-- **Wrapped Staking**: Convert stETH to **wstETH**, a non-rebasing token for DeFi protocols.
+-   Stake ETH and receive stETH
+-   Wrap stETH into wstETH (non-rebasing token)
+-   Unwrap wstETH back to stETH
+-   Request and claim ETH withdrawals
+-   Track staking rewards and APR
+-   Check stETH and wstETH balances
+-   View total staked ETH in Lido
 
-## **Supported Networks**
+### **Supported Networks**
 
-- **Ethereum**: Stake ETH and receive stETH for liquidity and DeFi strategies.
+-   **Ethereum**
 
-## **Common Tasks**
+### **Tokens**
 
-### **Staking ETH**
+-   **stETH** – Liquid staking token representing staked ETH
+-   **wstETH** – Wrapped stETH for use in DeFi protocols that require a non-rebasing token
 
-- Stake ETH and receive stETH:
-  - "Stake 1 ETH in Lido."
-  - "Stake half of my ETH in Lido."
-  - "Show my stETH balance."
+### **Example Operations**
 
-### **Unstaking & Withdrawals**
+1. **Staking Operations:**
 
-- Unstake stETH to retrieve ETH:
-  - "Unstake 2 stETH from Lido."
-  - "Unstake all my stETH from Lido."
-  - "Withdraw ETH from my stETH balance."
+    - Stake ETH and receive stETH
+    - Stake half of your ETH balance
+    - View stETH balance
 
-### **Wrapping & Unwrapping**
+2. **Unstaking & Withdrawals:**
 
-- Convert stETH to wstETH and back:
-  - "Wrap 1 stETH into wstETH."
-  - "Unwrap 2 wstETH back to stETH."
+    - Request withdrawal of stETH to ETH
+    - Unstake specific or full stETH balance
+    - Claim pending ETH withdrawals
 
-### **Checking Rewards & APR**
+3. **Wrapping & Unwrapping:**
 
-- Retrieve staking details and rewards:
-  - "Check my staking rewards."
-  - "Get my average APR in Lido."
-  - "Calculate total rewards earned."
+    - Wrap stETH into wstETH
+    - Unwrap wstETH back into stETH
 
-## **Available Functions**
+4. **Rewards & APR:**
 
-| Function                | Description                                             |
-| ----------------------- | ------------------------------------------------------- |
-| `stakeETH`              | Stake ETH through Lido and receive stETH                |
-| `wrapStETH`             | Convert stETH into wstETH                               |
-| `unwrapWstETH`          | Convert wstETH back into stETH                          |
-| `getStETHBalance`       | Retrieve stETH balance for a specific account           |
-| `getWstETHBalance`      | Retrieve wstETH balance for a specific account          |
-| `requestWithdrawStETH`  | Request a withdrawal of stETH back to ETH               |
-| `claimWithdrawStETH`    | Claim a pending withdrawal of ETH                       |
-| `getWstETHByStETH`      | Calculate the amount of wstETH for a given stETH amount |
-| `getStETHByWstETH`      | Calculate the amount of stETH for a given wstETH amount |
-| `getTotalStaked`        | Retrieve the total staked ETH in Lido                   |
-| `getTotalRewardsEarned` | Calculate total rewards earned from stETH staking       |
-| `getLidoAPR`            | Fetches the latest Lido APR from the official Lido API  |
+    - Check staking rewards
+    - Calculate total rewards earned
+    - Get the latest Lido APR
 
-## **Installation**
+5. **Query Functions:**
+    - Check stETH and wstETH balances
+    - Calculate conversion rates between stETH and wstETH
+    - Retrieve total staked ETH
+    - View total rewards earned
 
-To install Lido’s protocol package, run the following:
+### **Staking Token Features**
 
-```bash
-yarn add @heyanon/lido
-```
+1. **Rewards Tracking:**
+
+    - Earn staking rewards reflected in stETH balance
+    - Monitor total staking rewards
+    - View real-time Lido APR
+
+2. **Liquidity Options:**
+
+    - Use stETH or wstETH across DeFi platforms
+    - Convert stETH to wstETH for fixed supply strategies
+
+3. **Unstaking & Withdrawals:**
+    - Request stETH withdrawal back to ETH
+    - Claim ETH after the unbonding period
