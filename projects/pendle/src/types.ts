@@ -1,0 +1,1 @@
+export type SwapData = { amountOut: string, priceImpact: number };
