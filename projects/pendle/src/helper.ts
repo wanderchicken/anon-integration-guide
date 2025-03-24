@@ -19,3 +19,13 @@ export async function callSDK<Data>(path: string, params: Record<string, any> = 
 
     return response.data;
 }
+
+export async function getMarketData(chainId: number) {
+    try {
+        const response = await axios.get(`${HOSTED_SDK_URL}v1/${chainId}/markets/active`);
+        return response.data.markets;
+    } catch (error) {
+        console.error('Error fetching market data:', error);
+        throw error;
+    }
+} 
