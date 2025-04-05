@@ -2,6 +2,7 @@ import { Address, Hex, parseEther } from 'viem';
 import { EVM, EvmChain, FunctionOptions, FunctionReturn, toResult } from '@heyanon/sdk';
 import { callSDK, getMarketData } from '../helper';
 import { SwapData } from '../types';
+import { MARKET_TOKENS } from '../constants';
 
 const { getChainFromName } = EVM.utils;
 
@@ -9,7 +10,7 @@ interface swapTokenToPtProps {
     chainName: string; // Name of the blockchain network (e.g., "Ethereum")
     account: Address; // User's wallet address
     amount: string; // Amount of PT (Principal Token) to swap
-    TOKEN_ADDRESS: Address; // Address of the Input token (e.g., "ETH")
+    inToken: string; // Name of the Input token (e.g., "ETH")
     outToken: string; // Name of the output token (e.g., "PT stEth")
 }
 
@@ -20,7 +21,7 @@ interface swapTokenToPtProps {
  * @returns {Promise<FunctionReturn>} - A promise resolving to a success or error message.
  */
 export async function swapTokenToPt(
-    { chainName, account, amount, outToken, TOKEN_ADDRESS }: swapTokenToPtProps,
+    { chainName, account, amount, outToken, inToken }: swapTokenToPtProps,
     options: FunctionOptions
 ): Promise<FunctionReturn> {
     const {
@@ -54,11 +55,13 @@ export async function swapTokenToPt(
         const market = marketData.find((m: any) => m.name === outToken.split(" ")[1]);
         const PT_ADDRESS = market?.pt as Address;
         const MARKET_ADDRESS = market?.address as Address;
+        const TOKEN_ADDRESS = MARKET_TOKENS[chainId][inToken]
 
+        // ✅ Validate TOKEN_ADDRESS
+        if (!TOKEN_ADDRESS) return toResult(`Token address not found for ${inToken} on ${chainName}`, true);
 
-        // **Validate PT_ADDRESS**
+        // ✅ Validate PT_ADDRESS
         if (!PT_ADDRESS) return toResult(`No PT address found for ${outToken} on ${chainName}`, true);
-
 
         // **Call Pendle SDK to Get Swap Transaction Details**
         const res = await callSDK<SwapData>(`/v1/sdk/${chainId}/markets/${MARKET_ADDRESS}/swap`, {
@@ -93,6 +96,6 @@ export async function swapTokenToPt(
         return toResult(`Swap successful: Swapped ${amount} ${TOKEN_ADDRESS} to ${outToken}. Transaction: ${result.data}`);
     } catch (error) {
         // **Handle and Return Error Message**
-        return toResult(`Failed to swap ${TOKEN_ADDRESS} to ${outToken}: ${error instanceof Error ? error.message : 'Unknown error'}`, true);
+        return toResult(`Failed to swap ${inToken} to ${outToken}: ${error instanceof Error ? error.message : 'Unknown error'}`, true);
     }
 }
